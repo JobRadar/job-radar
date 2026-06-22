@@ -114,56 +114,132 @@ export function parsePublishedAt(text: string | null): Date | null {
 }
 
 /**
+ * Находит карточки вакансий на странице.
+ *
+ * Сначала пробуем стандартные селекторы (старый дизайн hh.ru).
+ * Если карточек не нашлось — переходим к fallback: ищем все ссылки
+ * с data-qa="serp-item__title" и поднимаемся до контейнера карточки.
+ * Это нужно для нового дизайна Magritte, где карточка обёрнута в
+ * произвольный div без стабильного data-qa на корневом элементе.
+ */
+function resolveCards(): Element[] {
+  const standard = Array.from(
+    document.querySelectorAll(
+      '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout',
+    ),
+  );
+  if (standard.length > 0) return standard;
+
+  // Fallback: находим карточки по ссылкам на вакансии
+  const titleLinks = Array.from(
+    document.querySelectorAll<HTMLAnchorElement>(
+      'a[data-qa="serp-item__title"]',
+    ),
+  );
+
+  const seen = new Set<Element>();
+  for (const link of titleLinks) {
+    // Поднимаемся вверх, ища осмысленный контейнер карточки
+    let el: Element | null = link.parentElement;
+    for (let i = 0; i < 12; i++) {
+      if (!el) break;
+      const dqa = el.getAttribute("data-qa") ?? "";
+      const tag = el.tagName.toLowerCase();
+      if (
+        dqa.includes("vacancy") ||
+        dqa.includes("serp") ||
+        tag === "li" ||
+        tag === "article"
+      ) {
+        seen.add(el);
+        break;
+      }
+      el = el.parentElement;
+    }
+    // Если контейнер не нашли — берём прямого родителя ссылки
+    if (!seen.has(link.parentElement as Element) && link.parentElement) {
+      seen.add(link.parentElement);
+    }
+  }
+
+  return Array.from(seen);
+}
+
+/**
  * Парсит список карточек вакансий со страницы поисковой выдачи hh.ru.
+ *
+ * Поддерживает оба дизайна hh.ru:
+ * - Старый (bloko): карточки с data-qa="vacancy-serp__vacancy"
+ * - Новый (Magritte): карточки без стабильного корневого атрибута,
+ *   заголовок через data-qa="serp-item__title" / "serp-item__title-text"
  */
 export async function parseSearchPage(
   page: Page,
 ): Promise<ScrapedVacancySummary[]> {
   return page
-    .evaluate((baseUrl) => {
-      const cards = document.querySelectorAll(
-        '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout',
-      );
+    .evaluate(
+      ({ baseUrl, resolveCardsFn }) => {
+        // Восстанавливаем функцию в контексте страницы
+        // biome-ignore lint/security/noGlobalEval: намеренно — сериализуем вспомогательную функцию для page.evaluate
+        const getCards = eval(`(${resolveCardsFn})`) as () => Element[];
+        const cards = getCards();
 
-      return Array.from(cards).map((card) => {
-        const titleEl = card.querySelector(
-          '[data-qa="serp-item__title"], [data-qa="vacancy-serp__vacancy-title"]',
-        );
-        const employerEl = card.querySelector(
-          '[data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
-        );
-        const salaryEl = card.querySelector(
-          '[data-qa="vacancy-serp__vacancy-compensation"]',
-        );
-        const areaEl = card.querySelector(
-          '[data-qa="vacancy-serp__vacancy-address"], [data-qa="vacancy-serp__vacancy-address-text"]',
-        );
-        const dateEl = card.querySelector(
-          '[data-qa="vacancy-serp__vacancy-date"]',
-        );
+        return cards.map((card) => {
+          // Ссылка на вакансию (новый дизайн: data-qa на самом <a>)
+          const linkEl =
+            (card.querySelector(
+              'a[data-qa="serp-item__title"], a[data-qa="vacancy-serp__vacancy-title"]',
+            ) as HTMLAnchorElement | null) ??
+            (card.querySelector(
+              "a[href*='/vacancy/']",
+            ) as HTMLAnchorElement | null);
 
-        const href =
-          titleEl?.closest("a")?.href ??
-          card.querySelector("a[href*='/vacancy/']")?.getAttribute("href") ??
-          "";
+          const href = linkEl?.href ?? "";
+          const url = href.startsWith("http")
+            ? (href.split("?")[0] ?? href)
+            : `${baseUrl}${href.split("?")[0] ?? href}`;
 
-        const url = href.startsWith("http")
-          ? (href.split("?")[0] ?? href)
-          : `${baseUrl}${href.split("?")[0] ?? href}`;
+          const hhIdMatch = url.match(/\/vacancy\/(\d+)/);
 
-        const hhIdMatch = url.match(/\/vacancy\/(\d+)/);
+          // Текст заголовка: новый дизайн кладёт его во вложенный span
+          const titleTextEl = card.querySelector(
+            '[data-qa="serp-item__title-text"]',
+          );
+          const titleFallbackEl = card.querySelector(
+            '[data-qa="serp-item__title"], [data-qa="vacancy-serp__vacancy-title"]',
+          );
+          const title =
+            titleTextEl?.textContent?.trim() ??
+            titleFallbackEl?.textContent?.trim() ??
+            linkEl?.textContent?.trim() ??
+            "";
 
-        return {
-          hhId: hhIdMatch?.[1] ?? "",
-          title: titleEl?.textContent?.trim() ?? "",
-          employerName: employerEl?.textContent?.trim() ?? null,
-          salaryText: salaryEl?.textContent?.trim() ?? null,
-          area: areaEl?.textContent?.trim() ?? null,
-          url,
-          publishedAtText: dateEl?.textContent?.trim() ?? null,
-        };
-      });
-    }, HH_BASE_URL)
+          const employerEl = card.querySelector(
+            '[data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
+          );
+          const salaryEl = card.querySelector(
+            '[data-qa="vacancy-serp__vacancy-compensation"]',
+          );
+          const areaEl = card.querySelector(
+            '[data-qa="vacancy-serp__vacancy-address"], [data-qa="vacancy-serp__vacancy-address-text"]',
+          );
+          const dateEl = card.querySelector(
+            '[data-qa="vacancy-serp__vacancy-date"]',
+          );
+
+          return {
+            hhId: hhIdMatch?.[1] ?? "",
+            title,
+            employerName: employerEl?.textContent?.trim() ?? null,
+            salaryText: salaryEl?.textContent?.trim() ?? null,
+            area: areaEl?.textContent?.trim() ?? null,
+            url,
+            publishedAtText: dateEl?.textContent?.trim() ?? null,
+          };
+        });
+      },
+      { baseUrl: HH_BASE_URL, resolveCardsFn: resolveCards.toString() },
+    )
     .then((items) =>
       items
         .filter((v) => v.hhId && v.title)

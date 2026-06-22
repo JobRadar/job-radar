@@ -107,8 +107,13 @@ export async function searchVacancies(
         pagesScraped++;
         log.info(`Поиск: страница ${pagesScraped}`, { url: request.url });
 
+        // Поддерживаем оба дизайна hh.ru: старый (bloko) и новый (Magritte)
         await page.waitForSelector(
-          '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout',
+          [
+            '[data-qa="vacancy-serp__vacancy"]',
+            ".vacancy-serp-item__layout",
+            'a[data-qa="serp-item__title"]',
+          ].join(", "),
           { timeout: 15_000 },
         );
 
