@@ -1,0 +1,45 @@
+{
+  "name": "@job-radar/root",
+  "private": true,
+  "engines": {
+    "node": "^22.21.0",
+    "bun": "^1.3.13"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "clean": "git clean -xdf node_modules",
+    "clean:workspaces": "turbo run clean",
+    "auth:generate": "bun --filter @job-radar/auth generate",
+    "db:push": "turbo -F @job-radar/db push",
+    "db:generate": "turbo -F @job-radar/db generate",
+    "db:migrate": "turbo -F @job-radar/db migrate",
+    "db:studio": "turbo -F @job-radar/db studio",
+    "dev": "turbo watch dev --continue",
+    "dev:next": "turbo watch dev -F @job-radar/app...",
+    "format": "biome format . --skip-parse-errors",
+    "format:fix": "biome format --write . --skip-parse-errors",
+    "lint": "biome lint . --skip-parse-errors",
+    "lint:fix": "biome lint --write . --skip-parse-errors",
+    "check": "biome check . --skip-parse-errors",
+    "check:fix": "biome check --write . --skip-parse-errors",
+    "lint:ws": "bunx sherif@latest",
+    "postinstall": "bun lint:ws",
+    "prepare": "lefthook install",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "ui-add": "turbo run ui-add"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.0",
+    "@turbo/gen": "^2.9.18",
+    "lefthook": "^2.1.9",
+    "turbo": "^2.9.18",
+    "typescript": "6.0.3"
+  },
+  "packageManager": "bun@1.3.14",
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "tooling/*"
+  ]
+}

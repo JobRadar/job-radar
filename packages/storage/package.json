@@ -1,0 +1,29 @@
+{
+  "name": "@job-radar/storage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsdown",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@job-radar/config": "workspace:*",
+    "@aws-sdk/client-s3": "3.1073.0",
+    "@aws-sdk/s3-request-presigner": "3.1073.0"
+  },
+  "devDependencies": {
+    "@job-radar/tsconfig": "workspace:*",
+    "@types/node": "26.0.0",
+    "tsdown": "latest",
+    "typescript": "6.0.3"
+  }
+}
