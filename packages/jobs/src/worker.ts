@@ -2,6 +2,8 @@ import { hatchet } from "./client";
 import { helloWorldTask } from "./workflows/hello-world";
 import { processDocumentWorkflow } from "./workflows/multi-step";
 import { scheduledWorkflow } from "./workflows/scheduled";
+import { scrapeHhWorkflow } from "./workflows/scrape-hh";
+import { scrapeHhScheduledWorkflow } from "./workflows/scrape-hh-scheduled";
 
 /**
  * Hatchet worker — long-running process that polls the Hatchet engine
@@ -20,11 +22,18 @@ import { scheduledWorkflow } from "./workflows/scheduled";
  * @see https://docs.hatchet.run/home/workers
  */
 async function main() {
-  const worker = await hatchet.worker("acme-worker", {
-    workflows: [helloWorldTask, scheduledWorkflow, processDocumentWorkflow],
+  const worker = await hatchet.worker("job-radar-worker", {
+    workflows: [
+      helloWorldTask,
+      scheduledWorkflow,
+      processDocumentWorkflow,
+      scrapeHhWorkflow,
+      scrapeHhScheduledWorkflow,
+    ],
     // Maximum number of concurrent task runs this worker will accept.
     // Tune based on the workload's CPU/memory profile.
-    slots: 20,
+    // Playwright скрапинг ресурсоёмкий — держим низкий concurrency.
+    slots: 10,
   });
 
   await worker.start();

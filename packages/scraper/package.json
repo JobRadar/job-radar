@@ -1,5 +1,5 @@
 {
-  "name": "@job-radar/jobs",
+  "name": "@job-radar/scraper",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,17 +11,18 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "bun run src/worker.ts",
+    "clean": "git clean -xdf .cache .turbo dist node_modules storage",
+    "dev": "bun run src/index.ts",
     "format": "biome format .",
     "lint": "biome lint .",
     "check": "biome check .",
-    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "playwright:install": "playwright install chromium --with-deps"
   },
   "dependencies": {
-    "@hatchet-dev/typescript-sdk": "1.24.3",
-    "@job-radar/db": "workspace:*",
-    "@job-radar/scraper": "workspace:*"
+    "@crawlee/playwright": "3.14.1",
+    "crawlee": "3.14.1",
+    "playwright": "1.52.0"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",

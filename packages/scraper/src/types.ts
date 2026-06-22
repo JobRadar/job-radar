@@ -1,0 +1,64 @@
+/** Зарплатная вилка с hh.ru */
+export interface HhSalary {
+  from: number | null;
+  to: number | null;
+  /** ISO 4217: RUR, USD, EUR и т.д. */
+  currency: string;
+  /** true — зарплата до вычета налогов */
+  gross: boolean;
+}
+
+/** Параметры поискового запроса к hh.ru */
+export interface HhSearchOptions {
+  keyword: string;
+  /** Код региона hh.ru. 113 = вся Россия, 1 = Москва, 2 = СПб */
+  area?: number;
+  salaryFrom?: number;
+  salaryTo?: number;
+  /** noExperience | between1And3 | between3And6 | moreThan6 */
+  experience?: string;
+  /** full | part | project | volunteer | probation */
+  employment?: string;
+  /** Максимальное число страниц выдачи (20 вакансий / стр). По умолчанию 5. */
+  maxPages?: number;
+}
+
+/** Краткая карточка вакансии — парсится со страницы поисковой выдачи */
+export interface ScrapedVacancySummary {
+  hhId: string;
+  title: string;
+  employerName: string | null;
+  salary: HhSalary | null;
+  area: string | null;
+  url: string;
+  publishedAt: Date | null;
+}
+
+/** Полные данные вакансии — дополняются после захода на страницу вакансии */
+export interface ScrapedVacancyDetails extends ScrapedVacancySummary {
+  description: string | null;
+  skills: string[];
+  experience: string | null;
+  employment: string | null;
+  schedule: string | null;
+  employerLogoUrl: string | null;
+}
+
+/** Опции авторизации на hh.ru */
+export interface HhAuthOptions {
+  /** Путь к файлу хранения cookies. По умолчанию из конфига. */
+  cookiesPath?: string;
+  /** Учётные данные для первичной авторизации */
+  credentials?: {
+    email: string;
+    password: string;
+  };
+}
+
+/** Итог прогона скрапера */
+export interface ScrapeResult {
+  keyword: string;
+  vacancies: ScrapedVacancyDetails[];
+  pagesScraped: number;
+  errors: string[];
+}
