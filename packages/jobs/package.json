@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "bun run src/worker.ts",
+    "dev": "bun run --env-file=../../.env src/worker.ts",
     "format": "biome format .",
     "lint": "biome lint .",
     "check": "biome check .",
