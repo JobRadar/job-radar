@@ -46,8 +46,8 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@acme/ui";
-import { useIsMobile } from "@acme/ui/hooks";
+} from "@job-radar/ui";
+import { useIsMobile } from "@job-radar/ui/hooks";
 import {
   type DataTableItemData,
   dataTableItemSchema,
@@ -55,7 +55,7 @@ import {
   limitFormSchema,
   type TargetFormData,
   targetFormSchema,
-} from "@acme/validators";
+} from "@job-radar/validators";
 import {
   closestCenter,
   DndContext,
@@ -111,7 +111,7 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 import { toast } from "sonner";
 import type { z } from "zod";
 
-// Use schema from @acme/validators
+// Use schema from @job-radar/validators
 export const schema = dataTableItemSchema;
 
 // Create a separate component for the drag handle

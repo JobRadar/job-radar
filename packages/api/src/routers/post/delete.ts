@@ -1,4 +1,4 @@
-import { eq, Post } from "@acme/db";
+import { eq, Post } from "@job-radar/db";
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 

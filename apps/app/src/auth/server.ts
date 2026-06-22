@@ -1,8 +1,8 @@
 import "server-only";
 
-import { initAuth } from "@acme/auth";
-import { env } from "@acme/config";
-import { OtpSignInEmail, ResetPasswordEmail, sendEmail } from "@acme/emails";
+import { initAuth } from "@job-radar/auth";
+import { env } from "@job-radar/config";
+import { OtpSignInEmail, ResetPasswordEmail, sendEmail } from "@job-radar/emails";
 import { nextCookies } from "better-auth/next-js";
 import { headers } from "next/headers";
 import { cache } from "react";

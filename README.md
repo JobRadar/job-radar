@@ -74,7 +74,7 @@ tooling
       └─ Shared tsconfig you can extend from
 ```
 
-> 💡 **Tip**: Replace `@acme` with your organization name using find-and-replace across the project.
+> 💡 **Tip**: Replace `@job-radar` with your organization name using find-and-replace across the project.
 
 ## ✨ Key Features
 

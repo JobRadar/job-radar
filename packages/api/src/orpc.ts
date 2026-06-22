@@ -9,16 +9,16 @@
  * wrap this and provide the required context.
  *
  * The context is intentionally decoupled from any concrete `better-auth` instance: callers resolve
- * the session themselves (via `auth.api.getSession`) and pass it in. This keeps `@acme/api` free of
+ * the session themselves (via `auth.api.getSession`) and pass it in. This keeps `@job-radar/api` free of
  * the `Auth` type, which previously caused cross-package type mismatches when `better-auth` resolved
  * to more than one instance in the workspace.
  *
  * @see https://orpc.dev/docs/server/context
  */
 
-import type { Session } from "@acme/auth";
-import { logger } from "@acme/config";
-import { db } from "@acme/db";
+import type { Session } from "@job-radar/auth";
+import { logger } from "@job-radar/config";
+import { db } from "@job-radar/db";
 import { ORPCError, os } from "@orpc/server";
 
 export interface CreateORPCContextOptions {

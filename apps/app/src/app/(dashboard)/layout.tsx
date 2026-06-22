@@ -1,4 +1,4 @@
-import { SidebarInset, SidebarProvider } from "@acme/ui";
+import { SidebarInset, SidebarProvider } from "@job-radar/ui";
 import type { ReactNode } from "react";
 import { getSession } from "~/auth/server";
 import { AppSidebar } from "~/components/sidebar";

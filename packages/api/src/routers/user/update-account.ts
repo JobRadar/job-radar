@@ -1,5 +1,5 @@
-import { eq, user } from "@acme/db";
-import { accountFormSchema } from "@acme/validators";
+import { eq, user } from "@job-radar/db";
+import { accountFormSchema } from "@job-radar/validators";
 
 import { protectedProcedure } from "../../orpc";
 

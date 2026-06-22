@@ -1,4 +1,4 @@
-import { helloWorldFunction, inngest, scheduledFunction } from "@acme/inngest";
+import { helloWorldFunction, inngest, scheduledFunction } from "@job-radar/inngest";
 import { serve } from "inngest/next";
 
 /**

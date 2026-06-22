@@ -1,6 +1,6 @@
 "use client";
 
-import { paths } from "@acme/config";
+import { paths } from "@job-radar/config";
 import {
   Button,
   Card,
@@ -18,8 +18,8 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
-} from "@acme/ui";
-import { type OTPFormData, otpFormSchema } from "@acme/validators";
+} from "@job-radar/ui";
+import { type OTPFormData, otpFormSchema } from "@job-radar/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

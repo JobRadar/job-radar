@@ -6,7 +6,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@acme/ui";
+} from "@job-radar/ui";
 import type { Icon } from "@tabler/icons-react";
 import type * as React from "react";
 

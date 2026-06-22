@@ -12,7 +12,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@acme/ui";
+} from "@job-radar/ui";
 import type { Icon } from "@tabler/icons-react";
 import { IconChevronRight } from "@tabler/icons-react";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@acme/ui";
+import { Button } from "@job-radar/ui";
 import { useEffect } from "react";
 
 export default function DashboardError({

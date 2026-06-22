@@ -1,4 +1,4 @@
-import { Skeleton } from "@acme/ui";
+import { Skeleton } from "@job-radar/ui";
 
 export default function SettingsLoading() {
   return (

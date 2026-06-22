@@ -1,6 +1,6 @@
 "use client";
 
-import { paths } from "@acme/config";
+import { paths } from "@job-radar/config";
 import {
   Button,
   Card,
@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
-} from "@acme/ui";
+} from "@job-radar/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useState } from "react";

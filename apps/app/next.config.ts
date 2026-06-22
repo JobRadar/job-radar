@@ -50,12 +50,12 @@ export default async function createNextConfig(): Promise<NextConfig> {
     /** Enables hot reloading for local packages without a build step */
     output: "standalone",
     transpilePackages: [
-      "@acme/api",
-      "@acme/auth",
-      "@acme/config",
-      "@acme/db",
-      "@acme/ui",
-      "@acme/validators",
+      "@job-radar/api",
+      "@job-radar/auth",
+      "@job-radar/config",
+      "@job-radar/db",
+      "@job-radar/ui",
+      "@job-radar/validators",
     ],
 
     /** We already do linting and typechecking as separate tasks in CI */

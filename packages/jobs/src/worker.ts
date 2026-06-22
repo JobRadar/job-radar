@@ -11,7 +11,7 @@ import { scheduledWorkflow } from "./workflows/scheduled";
  * ```bash
  * bun run dev         # from packages/jobs
  * # or from the repo root:
- * bun run dev --filter @acme/jobs
+ * bun run dev --filter @job-radar/jobs
  * ```
  *
  * The worker connects to Hatchet using HATCHET_CLIENT_TOKEN.
