@@ -22,8 +22,8 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@job-radar/tsconfig": "workspace:*",
     "@better-auth/cli": "1.4.21",
+    "@job-radar/tsconfig": "workspace:*",
     "@types/node": "26.0.0",
     "typescript": "6.0.3"
   }
