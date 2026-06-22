@@ -263,12 +263,106 @@ export async function parseVacancyPage(
   summary: ScrapedVacancySummary,
 ): Promise<ScrapedVacancyDetails> {
   const details = await page.evaluate(() => {
+    /**
+     * Конвертирует DOM-элемент в читаемый plain text.
+     *
+     * Правила:
+     * - Блочные элементы (p, div, h1-h6, li и т.д.) разделяются переносами строк
+     * - <br> → перенос строки
+     * - <li> получает маркер «• »
+     * - Заголовки окружаются пустыми строками
+     * - Множественные пустые строки сворачиваются в одну
+     * - Горизонтальные пробелы нормализуются
+     */
+    function htmlToText(root: Element): string {
+      const BLOCK = new Set([
+        "P",
+        "DIV",
+        "SECTION",
+        "ARTICLE",
+        "BLOCKQUOTE",
+        "PRE",
+        "TABLE",
+        "THEAD",
+        "TBODY",
+        "TFOOT",
+        "TR",
+        "TD",
+        "TH",
+        "FIGURE",
+        "FIGCAPTION",
+      ]);
+
+      function walk(node: Node): string {
+        if (node.nodeType === Node.TEXT_NODE) {
+          return (node.textContent ?? "").replace(/[\r\n\t]+/g, " ");
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+        const el = node as Element;
+        const tag = el.tagName.toUpperCase();
+
+        if (tag === "BR") return "\n";
+        if (tag === "HR") return "\n\n---\n\n";
+
+        // Скрытые элементы пропускаем
+        const style = (el as HTMLElement).style;
+        if (style?.display === "none" || style?.visibility === "hidden")
+          return "";
+
+        const inner = Array.from(el.childNodes).map(walk).join("");
+
+        if (tag === "LI") {
+          return `\n• ${inner.trim()}`;
+        }
+        if (tag === "UL" || tag === "OL") {
+          return `\n${inner}\n`;
+        }
+        if (/^H[1-6]$/.test(tag)) {
+          // Заголовки окружаем пустыми строками для визуального разделения
+          return `\n\n${inner.trim()}\n\n`;
+        }
+        if (BLOCK.has(tag)) {
+          const trimmed = inner.trim();
+          return trimmed ? `\n${trimmed}\n` : "";
+        }
+
+        return inner;
+      }
+
+      return walk(root)
+        .replace(/[ \t]+/g, " ") // схлопываем горизонтальные пробелы
+        .replace(/ *\n */g, "\n") // убираем пробелы вокруг переносов
+        .replace(/\n{3,}/g, "\n\n") // максимум одна пустая строка подряд
+        .trim();
+    }
+
     const text = (sel: string) =>
       document.querySelector(sel)?.textContent?.trim() ?? null;
 
-    const description =
-      document.querySelector('[data-qa="vacancy-description"]')?.innerHTML ??
-      null;
+    // Описание — конвертируем HTML в структурированный plain text
+    const descEl = document.querySelector('[data-qa="vacancy-description"]');
+    const description = descEl ? htmlToText(descEl) : null;
+
+    // Форматы оформления (офис / удалённо / гибрид и т.д.)
+    const hiringFormatsEl = document.querySelector(
+      'div[data-qa="vacancy-hiring-formats"]',
+    );
+    const hiringFormats = hiringFormatsEl
+      ? Array.from(
+          hiringFormatsEl.querySelectorAll(
+            // Magritte: теги-чипы внутри блока форматов
+            '[data-qa="vacancy-hiring-format"], [data-qa="hiring-format-tag"], span, li',
+          ),
+        )
+          .map((el) => el.textContent?.trim() ?? "")
+          .filter(
+            (v, i, arr) =>
+              v.length > 0 &&
+              // убираем дубли (вложенные span могут дать одно и то же)
+              arr.indexOf(v) === i,
+          )
+      : [];
 
     const skills = Array.from(
       document.querySelectorAll(
@@ -284,12 +378,22 @@ export async function parseVacancyPage(
 
     return {
       description,
+      hiringFormats,
       skills,
       experience:
         text('[data-qa="vacancy-experience"]') ??
         text('[data-qa="vacancy-view-employment-mode"]'),
       employment: text('[data-qa="vacancy-view-employment-mode"]'),
-      schedule: text('[data-qa="vacancy-view-work-format"]'),
+      schedule: (() => {
+        // Новый Magritte: data-qa="work-formats-text", значение вида
+        // "Формат работы: на месте работодателя или гибрид"
+        const raw =
+          text('[data-qa="work-formats-text"]') ??
+          text('[data-qa="vacancy-view-work-format"]');
+        if (!raw) return null;
+        // Убираем префикс «Формат работы:» если он есть
+        return raw.replace(/^формат\s+работы\s*:\s*/i, "").trim() || null;
+      })(),
       employerLogoUrl: logoEl?.src ?? null,
     };
   });

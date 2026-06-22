@@ -170,6 +170,7 @@ export async function searchVacancies(
           vacancies.push({
             ...summary,
             description: null,
+            hiringFormats: [],
             skills: [],
             experience: null,
             employment: null,

@@ -36,11 +36,14 @@ export interface ScrapedVacancySummary {
 
 /** Полные данные вакансии — дополняются после захода на страницу вакансии */
 export interface ScrapedVacancyDetails extends ScrapedVacancySummary {
+  /** Текстовое описание вакансии (без HTML, с сохранением структуры) */
   description: string | null;
   skills: string[];
   experience: string | null;
   employment: string | null;
   schedule: string | null;
+  /** Форматы работы: офис / удалённо / гибрид и т.д. */
+  hiringFormats: string[];
   employerLogoUrl: string | null;
 }
 
