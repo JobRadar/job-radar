@@ -16,6 +16,7 @@ import {
   IconChartBar,
   IconDashboard,
   IconDatabase,
+  IconFileText,
   IconFileWord,
   IconFolder,
   IconHelp,
@@ -55,6 +56,15 @@ const data = {
         { title: "Все", url: paths.vacancies.root },
         { title: "Новые", url: `${paths.vacancies.root}?status=new` },
         { title: "Архив", url: `${paths.vacancies.root}?status=archived` },
+      ],
+    },
+    {
+      title: "Резюме",
+      url: paths.resumes.root,
+      icon: IconFileText,
+      items: [
+        { title: "Все", url: paths.resumes.root },
+        { title: "Создать", url: paths.resumes.new },
       ],
     },
     {

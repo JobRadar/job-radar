@@ -3,6 +3,7 @@ const ROOTS = {
   AUTH: "/auth",
   SETTINGS: "/settings",
   VACANCIES: "/vacancies",
+  RESUMES: "/resumes",
 } as const;
 
 export const paths = {
@@ -11,6 +12,11 @@ export const paths = {
   },
   vacancies: {
     root: ROOTS.VACANCIES,
+  },
+  resumes: {
+    root: ROOTS.RESUMES,
+    new: `${ROOTS.RESUMES}/new`,
+    byId: (id: string) => `${ROOTS.RESUMES}/${id}`,
   },
   auth: {
     root: ROOTS.AUTH,
