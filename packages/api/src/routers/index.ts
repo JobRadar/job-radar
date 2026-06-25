@@ -19,11 +19,13 @@
 import { adminRouter } from "./admin";
 import { postRouter } from "./post";
 import { userRouter } from "./user";
+import { vacancyRouter } from "./vacancy";
 
 export const appRouter = {
   user: userRouter,
   post: postRouter,
   admin: adminRouter,
+  vacancy: vacancyRouter,
 };
 
 export type AppRouter = typeof appRouter;

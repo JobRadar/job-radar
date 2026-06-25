@@ -12,6 +12,7 @@ import {
   SidebarRail,
 } from "@job-radar/ui";
 import {
+  IconBriefcase,
   IconChartBar,
   IconDashboard,
   IconDatabase,
@@ -44,6 +45,16 @@ const data = {
         { title: "Overview", url: paths.dashboard.root },
         { title: "Analytics", url: "#" },
         { title: "Reports", url: "#" },
+      ],
+    },
+    {
+      title: "Вакансии",
+      url: paths.vacancies.root,
+      icon: IconBriefcase,
+      items: [
+        { title: "Все", url: paths.vacancies.root },
+        { title: "Новые", url: `${paths.vacancies.root}?status=new` },
+        { title: "Архив", url: `${paths.vacancies.root}?status=archived` },
       ],
     },
     {
