@@ -1,5 +1,5 @@
 {
-  "name": "@job-radar/jobs",
+  "name": "@job-radar/ai",
   "private": true,
   "type": "module",
   "exports": {
@@ -12,17 +12,17 @@
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "bun run --env-file=../../.env src/worker.ts",
+    "dev": "tsc",
     "format": "biome format .",
     "lint": "biome lint .",
     "check": "biome check .",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hatchet-dev/typescript-sdk": "1.24.3",
-    "@job-radar/ai": "workspace:*",
-    "@job-radar/db": "workspace:*",
-    "@job-radar/scraper": "workspace:*"
+    "@job-radar/config": "workspace:*",
+    "@openrouter/ai-sdk-provider": "2.10.0",
+    "ai": "6.0.162",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",

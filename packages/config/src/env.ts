@@ -35,6 +35,12 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: z.string().optional(),
     AWS_REGION: z.string().default("us-east-1"),
     AWS_S3_BUCKET: z.string().default("acme-bucket"),
+
+    // LLM (OpenRouter)
+    OPENROUTER_API_KEY: z.string().optional(),
+    OPENROUTER_BASE_URL: z.string().default("https://openrouter.ai/api/v1"),
+    /** Модель по умолчанию для скоринга/генерации, напр. "openai/gpt-4o-mini" */
+    OPENROUTER_MODEL: z.string().default("openai/gpt-4o-mini"),
   },
   client: {
     NEXT_PUBLIC_APP_NAME: z.string().default("Acme Inc."),
@@ -62,6 +68,9 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_REGION: process.env.AWS_REGION,
     AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+    OPENROUTER_BASE_URL: process.env.OPENROUTER_BASE_URL,
+    OPENROUTER_MODEL: process.env.OPENROUTER_MODEL,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_SHORT_NAME: process.env.NEXT_PUBLIC_APP_SHORT_NAME,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,

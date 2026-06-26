@@ -16,7 +16,9 @@ export const paths = {
   resumes: {
     root: ROOTS.RESUMES,
     new: `${ROOTS.RESUMES}/new`,
+    generate: `${ROOTS.RESUMES}/generate`,
     byId: (id: string) => `${ROOTS.RESUMES}/${id}`,
+    matches: (id: string) => `${ROOTS.RESUMES}/${id}/matches`,
   },
   auth: {
     root: ROOTS.AUTH,

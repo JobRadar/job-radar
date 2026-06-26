@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
+    "@job-radar/ai": "workspace:*",
     "@job-radar/auth": "workspace:*",
     "@job-radar/config": "workspace:*",
     "@job-radar/db": "workspace:*",

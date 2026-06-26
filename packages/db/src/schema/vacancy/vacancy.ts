@@ -1,5 +1,6 @@
 import { pgTable } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { Category } from "../category/category";
 import { SearchKeyword } from "./keyword";
 
 /**
@@ -24,6 +25,8 @@ export const Vacancy = pgTable("vacancies", (t) => ({
     .uuid()
     .notNull()
     .references(() => SearchKeyword.id, { onDelete: "cascade" }),
+  /** Категория (роль) вакансии; наследуется от keyword при скрапинге */
+  categoryId: t.uuid().references(() => Category.id, { onDelete: "set null" }),
   title: t.varchar({ length: 512 }).notNull(),
   employerName: t.varchar({ length: 256 }),
   employerLogoUrl: t.varchar({ length: 1024 }),

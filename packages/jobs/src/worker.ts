@@ -1,7 +1,9 @@
 import { hatchet } from "./client";
+import { generateResumeWorkflow } from "./workflows/generate-resume";
 import { helloWorldTask } from "./workflows/hello-world";
 import { processDocumentWorkflow } from "./workflows/multi-step";
 import { scheduledWorkflow } from "./workflows/scheduled";
+import { scoreResumeMatchesWorkflow } from "./workflows/score-resume-matches";
 import { scrapeHhWorkflow } from "./workflows/scrape-hh";
 import { scrapeHhScheduledWorkflow } from "./workflows/scrape-hh-scheduled";
 
@@ -29,6 +31,8 @@ async function main() {
       processDocumentWorkflow,
       scrapeHhWorkflow,
       scrapeHhScheduledWorkflow,
+      generateResumeWorkflow,
+      scoreResumeMatchesWorkflow,
     ],
     // Maximum number of concurrent task runs this worker will accept.
     // Tune based on the workload's CPU/memory profile.

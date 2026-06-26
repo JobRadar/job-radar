@@ -19,6 +19,8 @@
  */
 
 import { adminRouter } from "./admin";
+import { categoryRouter } from "./category";
+import { matchRouter } from "./match";
 import { postRouter } from "./post";
 import { resumeRouter } from "./resume";
 import { userRouter } from "./user";
@@ -30,6 +32,8 @@ export const appRouter = {
   admin: adminRouter,
   vacancy: vacancyRouter,
   resume: resumeRouter,
+  category: categoryRouter,
+  match: matchRouter,
 };
 
 export type AppRouter = typeof appRouter;

@@ -12,7 +12,12 @@ import {
   CardTitle,
   toast,
 } from "@job-radar/ui";
-import { IconEdit, IconFileText, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconFileText,
+  IconTarget,
+  IconTrash,
+} from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -70,7 +75,12 @@ export function ResumeList({ items }: { items: ResumeRow[] }) {
           <CardHeader>
             <div className="flex items-start justify-between gap-2">
               <CardTitle className="line-clamp-2">{resume.title}</CardTitle>
-              {resume.isDefault && <Badge>Основное</Badge>}
+              <div className="flex shrink-0 items-center gap-1">
+                {resume.kind === "generated" && (
+                  <Badge variant="secondary">Сгенерировано</Badge>
+                )}
+                {resume.isDefault && <Badge>Основное</Badge>}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="flex-1">
@@ -89,6 +99,12 @@ export function ResumeList({ items }: { items: ResumeRow[] }) {
               {format(new Date(resume.createdAt), "d MMM yyyy", { locale: ru })}
             </span>
             <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" asChild>
+                <Link href={paths.resumes.matches(resume.id)}>
+                  <IconTarget className="size-4" />
+                  Соответствие
+                </Link>
+              </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href={paths.resumes.byId(resume.id)}>
                   <IconEdit className="size-4" />

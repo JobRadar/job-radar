@@ -3,6 +3,7 @@ import { pgTable } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { user } from "../auth/user";
+import { Category } from "../category/category";
 
 /**
  * Ключевые слова для поиска вакансий на hh.ru.
@@ -14,6 +15,8 @@ export const SearchKeyword = pgTable("search_keywords", (t) => ({
     .text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  /** Категория (роль), под которую ведётся поиск; наследуется вакансиями */
+  categoryId: t.uuid().references(() => Category.id, { onDelete: "set null" }),
   keyword: t.varchar({ length: 256 }).notNull(),
   /** Код региона hh.ru: 1 — Москва, 2 — Санкт-Петербург, 0 — вся Россия */
   area: t.integer().default(113).notNull(), // 113 = вся Россия

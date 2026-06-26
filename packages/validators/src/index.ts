@@ -6,3 +6,4 @@ export * from "./login";
 export * from "./otp";
 export * from "./profile";
 export * from "./resume";
+export * from "./resume-generation";

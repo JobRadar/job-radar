@@ -27,6 +27,7 @@
     "push": "bun --env-file=../../.env run drizzle-kit push",
     "studio": "bun --env-file=../../.env run drizzle-kit studio",
     "drop": "bun --env-file=../../.env run src/scripts/drop-schema.ts",
+    "seed:categories": "bun --env-file=../../.env run src/scripts/seed-categories.ts",
     "generate": "bun --env-file=../../.env run drizzle-kit generate",
     "migrate": "bun --env-file=../../.env run drizzle-kit migrate",
     "test": "bun test",

@@ -1,6 +1,6 @@
 import { paths } from "@job-radar/config";
 import { Button } from "@job-radar/ui";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconSparkles } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { SiteHeader } from "~/components/layout";
@@ -30,12 +30,20 @@ export default async function ResumesPage() {
                 : "Управляйте своими резюме для откликов на вакансии"}
             </p>
           </div>
-          <Button asChild>
-            <Link href={paths.resumes.new}>
-              <IconPlus className="size-4" />
-              Создать
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href={paths.resumes.generate}>
+                <IconSparkles className="size-4" />
+                Сгенерировать
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href={paths.resumes.new}>
+                <IconPlus className="size-4" />
+                Создать
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {/* Список */}
