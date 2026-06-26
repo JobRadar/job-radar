@@ -32,7 +32,7 @@ export function VacancyFilters({ search, status }: VacancyFiltersProps) {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchValue]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchValue, pathname, router, searchParams]);
 
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());

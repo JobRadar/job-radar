@@ -1,4 +1,4 @@
-import { and, desc, eq, exists, ilike, sql } from "@job-radar/db";
+import { and, eq, exists, ilike, sql } from "@job-radar/db";
 import { SearchKeyword, Vacancy } from "@job-radar/db/schema";
 import { z } from "zod";
 
