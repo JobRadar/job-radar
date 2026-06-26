@@ -20,6 +20,7 @@
 
 import { adminRouter } from "./admin";
 import { categoryRouter } from "./category";
+import { keywordRouter } from "./keyword";
 import { matchRouter } from "./match";
 import { postRouter } from "./post";
 import { resumeRouter } from "./resume";
@@ -36,6 +37,7 @@ export const appRouter = {
   category: categoryRouter,
   match: matchRouter,
   trends: trendsRouter,
+  keyword: keywordRouter,
 };
 
 export type AppRouter = typeof appRouter;

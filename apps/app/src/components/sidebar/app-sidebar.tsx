@@ -56,6 +56,7 @@ const data = {
         { title: "Все", url: paths.vacancies.root },
         { title: "Новые", url: `${paths.vacancies.root}?status=new` },
         { title: "Архив", url: `${paths.vacancies.root}?status=archived` },
+        { title: "Ключевые слова", url: paths.keywords.root },
       ],
     },
     {
