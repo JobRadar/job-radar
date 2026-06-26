@@ -3,7 +3,7 @@
 import { Input, Tabs, TabsList, TabsTrigger } from "@job-radar/ui";
 import { IconSearch } from "@tabler/icons-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface VacancyFiltersProps {
   search: string;
@@ -18,9 +18,24 @@ export function VacancyFilters({ search, status }: VacancyFiltersProps) {
   // Локальное состояние поиска с дебаунсом
   const [searchValue, setSearchValue] = useState(search);
 
+  // Читаем searchParams через ref чтобы не включать его в deps эффекта.
+  // useSearchParams() возвращает новый объект на каждой навигации,
+  // поэтому включение в deps вызывало бесконечный цикл:
+  // push → searchParams меняется → эффект → push → ...
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    // Пропускаем первый рендер — значение уже в URL
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParamsRef.current.toString());
       if (searchValue) {
         params.set("search", searchValue);
       } else {
@@ -32,7 +47,9 @@ export function VacancyFilters({ search, status }: VacancyFiltersProps) {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [searchValue, pathname, router, searchParams]);
+    // searchParams намеренно исключён из deps — используем ref выше
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchValue, pathname, router]);
 
   function handleStatusChange(value: string) {
     const params = new URLSearchParams(searchParams.toString());

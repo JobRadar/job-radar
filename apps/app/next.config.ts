@@ -54,9 +54,13 @@ export default async function createNextConfig(): Promise<NextConfig> {
       "@job-radar/auth",
       "@job-radar/config",
       "@job-radar/db",
+      "@job-radar/jobs",
       "@job-radar/ui",
       "@job-radar/validators",
     ],
+
+    /** Hatchet SDK relies on gRPC native deps — keep it server-external */
+    serverExternalPackages: ["@hatchet-dev/typescript-sdk"],
 
     /** We already do linting and typechecking as separate tasks in CI */
     typescript: { ignoreBuildErrors: true },

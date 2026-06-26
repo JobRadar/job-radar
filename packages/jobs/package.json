@@ -6,6 +6,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
+    },
+    "./triggers": {
+      "types": "./dist/triggers.d.ts",
+      "default": "./src/triggers.ts"
     }
   },
   "license": "MIT",

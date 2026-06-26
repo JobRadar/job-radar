@@ -20,7 +20,12 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import type * as React from "react";
-import { NavMain, NavSecondary, NavUser } from "~/components/sidebar";
+import {
+  NavMain,
+  NavSecondary,
+  NavUser,
+  ScrapeButton,
+} from "~/components/sidebar";
 
 const data = {
   navMain: [
@@ -99,6 +104,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <ScrapeButton />
         <NavMain items={data.navMain} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

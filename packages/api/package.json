@@ -23,6 +23,7 @@
     "@job-radar/auth": "workspace:*",
     "@job-radar/config": "workspace:*",
     "@job-radar/db": "workspace:*",
+    "@job-radar/jobs": "workspace:*",
     "@job-radar/validators": "workspace:*",
     "@orpc/contract": "^1.14.6",
     "@orpc/server": "^1.14.6",

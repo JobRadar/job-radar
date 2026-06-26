@@ -11,6 +11,12 @@ import { hatchet } from "../client";
 export interface ScrapeHhInput {
   /** UUID записи SearchKeyword — источник настроек поиска */
   keywordId: string;
+  /**
+   * Максимальное число страниц выдачи (20 вакансий / стр).
+   * Если не указано — берётся из HH_SCRAPER_MAX_PAGES (по умолчанию 5).
+   * Например, `maxPages: 1` — «последние 20 вакансий».
+   */
+  maxPages?: number;
 }
 
 /**
@@ -73,6 +79,7 @@ const initRun = scrapeHhWorkflow.task({
       area: keyword.area,
       experience: keyword.experience ?? undefined,
       employment: keyword.employment ?? undefined,
+      maxPages: input.maxPages,
     };
   },
 });
@@ -92,6 +99,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
       area,
       experience,
       employment,
+      maxPages,
     } = await ctx.parentOutput(initRun);
 
     const config = getScraperConfig();
@@ -115,7 +123,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
         area: area ?? 113,
         experience: experience ?? undefined,
         employment: employment ?? undefined,
-        maxPages: Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
+        maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
       },
       config,
       cookies,

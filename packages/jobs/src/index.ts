@@ -1,4 +1,5 @@
 export { hatchet } from "./client";
+export { triggerScrapeHh } from "./triggers";
 export type { GenerateResumeJobInput } from "./workflows/generate-resume";
 export { generateResumeWorkflow } from "./workflows/generate-resume";
 export type { HelloWorldInput } from "./workflows/hello-world";
