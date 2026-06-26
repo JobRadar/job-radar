@@ -1,4 +1,4 @@
-import { and, eq, exists, ilike, sql } from "@job-radar/db";
+import { and, desc, eq, exists, ilike, sql } from "@job-radar/db";
 import { SearchKeyword, Vacancy } from "@job-radar/db/schema";
 import { z } from "zod";
 
@@ -23,8 +23,10 @@ export const list = protectedProcedure
     const { db, session } = context;
     const userId = session.user.id;
 
-    // Correlated subquery: vacancy must belong to one of the user's keywords
-    const conditions: ReturnType<typeof eq>[] = [
+    // Correlated subquery: vacancy must belong to one of the user's keywords.
+    // Using db.select().from() instead of db.query.findMany() so that
+    // Vacancy.keywordId inside EXISTS correctly resolves to the outer FROM clause.
+    const conditions = [
       exists(
         db
           .select({ one: sql`1` })
@@ -35,36 +37,29 @@ export const list = protectedProcedure
               eq(SearchKeyword.userId, userId),
             ),
           ),
-      ) as unknown as ReturnType<typeof eq>,
+      ),
     ];
 
     if (input.search) {
-      conditions.push(
-        ilike(Vacancy.title, `%${input.search}%`) as unknown as ReturnType<
-          typeof eq
-        >,
-      );
+      conditions.push(ilike(Vacancy.title, `%${input.search}%`));
     }
 
     if (input.status === "new") {
-      conditions.push(
-        eq(Vacancy.isNew, true) as unknown as ReturnType<typeof eq>,
-      );
+      conditions.push(eq(Vacancy.isNew, true));
     } else if (input.status === "archived") {
-      conditions.push(
-        eq(Vacancy.isArchived, true) as unknown as ReturnType<typeof eq>,
-      );
+      conditions.push(eq(Vacancy.isArchived, true));
     }
 
     const whereClause = and(...conditions);
 
     const [items, countResult] = await Promise.all([
-      db.query.Vacancy.findMany({
-        where: whereClause,
-        limit: input.limit,
-        offset: input.offset,
-        orderBy: (_v, { desc: d }) => [d(Vacancy.createdAt)],
-      }),
+      db
+        .select()
+        .from(Vacancy)
+        .where(whereClause)
+        .orderBy(desc(Vacancy.createdAt))
+        .limit(input.limit)
+        .offset(input.offset),
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(Vacancy)

@@ -15,25 +15,12 @@ import {
   IconBriefcase,
   IconChartBar,
   IconDashboard,
-  IconDatabase,
   IconFileText,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
   IconSettings,
-  IconUsers,
 } from "@tabler/icons-react";
 import type * as React from "react";
-import {
-  NavDocuments,
-  NavMain,
-  NavSecondary,
-  NavUser,
-} from "~/components/sidebar";
+import { NavMain, NavSecondary, NavUser } from "~/components/sidebar";
 
 const data = {
   navMain: [
@@ -42,11 +29,7 @@ const data = {
       url: paths.dashboard.root,
       icon: IconDashboard,
       isActive: true,
-      items: [
-        { title: "Overview", url: paths.dashboard.root },
-        { title: "Analytics", url: "#" },
-        { title: "Reports", url: "#" },
-      ],
+      items: [{ title: "Overview", url: paths.dashboard.root }],
     },
     {
       title: "Вакансии",
@@ -70,37 +53,10 @@ const data = {
       ],
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-      items: [
-        { title: "Active", url: "#" },
-        { title: "Archived", url: "#" },
-      ],
-    },
-    {
       title: "Тренды",
       url: paths.trends.root,
       icon: IconChartBar,
       items: [{ title: "Рынок", url: paths.trends.root }],
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-      items: [
-        { title: "Active Projects", url: "#" },
-        { title: "Archived", url: "#" },
-      ],
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-      items: [
-        { title: "Members", url: "#" },
-        { title: "Roles", url: "#" },
-      ],
     },
   ],
   navSecondary: [
@@ -108,33 +64,6 @@ const data = {
       title: "Settings",
       url: paths.settings.root,
       icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
     },
   ],
 };
@@ -171,7 +100,6 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
