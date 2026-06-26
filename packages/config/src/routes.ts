@@ -4,6 +4,7 @@ const ROOTS = {
   SETTINGS: "/settings",
   VACANCIES: "/vacancies",
   RESUMES: "/resumes",
+  TRENDS: "/trends",
 } as const;
 
 export const paths = {
@@ -12,6 +13,9 @@ export const paths = {
   },
   vacancies: {
     root: ROOTS.VACANCIES,
+  },
+  trends: {
+    root: ROOTS.TRENDS,
   },
   resumes: {
     root: ROOTS.RESUMES,

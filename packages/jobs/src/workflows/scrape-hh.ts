@@ -68,6 +68,7 @@ const initRun = scrapeHhWorkflow.task({
     return {
       scrapeRunId: scrapeRun.id,
       keywordId: keyword.id,
+      categoryId: keyword.categoryId ?? undefined,
       keyword: keyword.keyword,
       area: keyword.area,
       experience: keyword.experience ?? undefined,
@@ -83,8 +84,15 @@ const scrapeAndSave = scrapeHhWorkflow.task({
   retries: 2,
   executionTimeout: "30m",
   fn: async (_rawInput, ctx) => {
-    const { scrapeRunId, keywordId, keyword, area, experience, employment } =
-      await ctx.parentOutput(initRun);
+    const {
+      scrapeRunId,
+      keywordId,
+      categoryId,
+      keyword,
+      area,
+      experience,
+      employment,
+    } = await ctx.parentOutput(initRun);
 
     const config = getScraperConfig();
 
@@ -138,6 +146,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
             schedule: v.schedule ?? undefined,
             description: v.description ?? undefined,
             skills: v.skills,
+            categoryId: categoryId ?? undefined,
             publishedAt: v.publishedAt ?? undefined,
             isArchived: false,
           })
@@ -146,6 +155,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
         await db.insert(Vacancy).values({
           hhId: v.hhId,
           keywordId,
+          categoryId: categoryId ?? undefined,
           title: v.title,
           employerName: v.employerName ?? undefined,
           employerLogoUrl: v.employerLogoUrl ?? undefined,

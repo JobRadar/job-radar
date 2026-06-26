@@ -23,6 +23,7 @@ import { categoryRouter } from "./category";
 import { matchRouter } from "./match";
 import { postRouter } from "./post";
 import { resumeRouter } from "./resume";
+import { trendsRouter } from "./trends";
 import { userRouter } from "./user";
 import { vacancyRouter } from "./vacancy";
 
@@ -34,6 +35,7 @@ export const appRouter = {
   resume: resumeRouter,
   category: categoryRouter,
   match: matchRouter,
+  trends: trendsRouter,
 };
 
 export type AppRouter = typeof appRouter;

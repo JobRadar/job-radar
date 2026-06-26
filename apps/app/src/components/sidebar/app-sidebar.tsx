@@ -65,6 +65,7 @@ const data = {
       items: [
         { title: "Все", url: paths.resumes.root },
         { title: "Создать", url: paths.resumes.new },
+        { title: "Сгенерировать", url: paths.resumes.generate },
       ],
     },
     {
@@ -77,13 +78,10 @@ const data = {
       ],
     },
     {
-      title: "Analytics",
-      url: "#",
+      title: "Тренды",
+      url: paths.trends.root,
       icon: IconChartBar,
-      items: [
-        { title: "Overview", url: "#" },
-        { title: "Trends", url: "#" },
-      ],
+      items: [{ title: "Рынок", url: paths.trends.root }],
     },
     {
       title: "Projects",
