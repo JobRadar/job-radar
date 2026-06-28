@@ -1,0 +1,3 @@
+{"level":"info","time":"2026-06-28T07:39:56.907Z","msg":"Запущен CLI-скрипт авторизации","logFilePath":"C:\\Projects\\JobRadar\\storage\\logs\\scraper.log"}
+{"level":"info","time":"2026-06-28T07:39:56.911Z","msg":"Начинаем авторизацию на hh.ru","headless":false,"cookiesPath":"./storage/hh-cookies.json","phoneLength":10}
+{"level":"debug","time":"2026-06-28T07:39:56.912Z","msg":"Запускаем браузер Chromium","headless":false,"args":["--no-sandbox","--disable-setuid-sandbox","--disable-gpu","--disable-dev-shm-usage"]}

@@ -2,11 +2,13 @@ import { loginToHh } from "./hh/auth.js";
 import { getScraperConfig } from "./config.js";
 
 // Загружаем окружение через config (использует @t3-oss/env-core)
-import { env } from "@job-radar/config";
+import { LOG_FILE_PATH, logger } from "@job-radar/config";
 
 const args = process.argv.slice(2);
 
 async function main() {
+  logger.info("Запущен CLI-скрипт авторизации", { logFilePath: LOG_FILE_PATH });
+  
   const config = getScraperConfig();
   
   // Определяем режим headless:
@@ -22,6 +24,7 @@ async function main() {
   }
 
   if (!process.env.HH_PHONE || !process.env.HH_PASSWORD) {
+    logger.error("Отсутствуют переменные окружения HH_PHONE или HH_PASSWORD");
     console.error(
       "Ошибка: Нужно указать HH_PHONE и HH_PASSWORD в переменных окружения!",
     );
@@ -31,6 +34,7 @@ async function main() {
   console.log("Начинаем авторизацию на hh.ru...");
   console.log(`Headless: ${headless}`);
   console.log(`Cookies будут сохранены в: ${config.cookiesPath}`);
+  console.log(`📝 Логи записываются в: ${LOG_FILE_PATH}`);
   if (!headless) {
     console.log("💡 Браузер откроется для авторизации!");
   }
