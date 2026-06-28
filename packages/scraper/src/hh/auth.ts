@@ -116,8 +116,10 @@ export async function loginToHh(
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-gpu",
         "--disable-dev-shm-usage",
+        "--enable-logging=stderr",
+        "--v=1",
+        "--disable-background-networking=false",
       ],
     });
     browser = await chromium.launch({
@@ -126,10 +128,29 @@ export async function loginToHh(
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-gpu",
         "--disable-dev-shm-usage",
+        "--enable-logging=stderr",
+        "--v=1",
+        "--start-maximized",
       ],
+      handleSIGHUP: false,
+      handleSIGINT: false,
+      handleSIGTERM: false,
     });
+
+    // Логируем stderr браузера
+    browser.on("disconnected", () => logger.debug("Браузер отключился"));
+    // @ts-expect-error - process() method exists in Playwright
+    const process = browser.process() as any;
+    if (process) {
+      logger.debug("Процесс браузера запущен", { pid: process.pid });
+      process.stderr?.on("data", (data: Buffer) => {
+        logger.debug("Chromium stderr", { data: data.toString() });
+      });
+      process.stdout?.on("data", (data: Buffer) => {
+        logger.debug("Chromium stdout", { data: data.toString() });
+      });
+    }
     logger.info("Браузер Chromium успешно запущен", {
       browserVersion: browser.version(),
     });
@@ -144,11 +165,29 @@ export async function loginToHh(
 
     logger.debug("Создаем новую страницу");
     const page = await context.newPage();
+
+    // Логируем все события страницы
+    page.on("request", (request) => {
+      logger.debug("Запрос", { url: request.url(), method: request.method() });
+    });
+    page.on("response", (response) => {
+      logger.debug("Ответ", { url: response.url(), status: response.status() });
+    });
+    page.on("console", (msg) => {
+      logger.debug("Консоль браузера", { type: msg.type(), text: msg.text() });
+    });
+    page.on("pageerror", (error) => {
+      logger.error("Ошибка на странице", error);
+    });
+
     logger.info("Новая страница создана");
 
     // 1. Переходим на страницу логина
     logger.debug("Переходим на страницу логина", { url: HH_LOGIN_URL });
-    await page.goto(HH_LOGIN_URL, { waitUntil: "networkidle" });
+    await page.goto(HH_LOGIN_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
     logger.info("Страница логина загружена", { url: page.url() });
 
     // 2. Нажимаем кнопку «Войти» чтобы открыть форму ввода
