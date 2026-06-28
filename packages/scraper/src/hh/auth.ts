@@ -65,12 +65,21 @@ export interface LoginCredentials {
 export async function loginToHh(
   credentials: LoginCredentials,
   cookiesPath: string,
-  headless = true,
+  headless = false,
 ): Promise<Cookie[]> {
   let browser: Browser | null = null;
 
   try {
-    browser = await chromium.launch({ headless });
+    browser = await chromium.launch({
+      headless,
+      timeout: 300000, // 5 minutes launch timeout
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-gpu",
+        "--disable-dev-shm-usage",
+      ],
+    });
     const context: BrowserContext = await browser.newContext({
       locale: "ru-RU",
       userAgent:
