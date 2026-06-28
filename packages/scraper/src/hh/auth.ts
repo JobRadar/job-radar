@@ -113,28 +113,14 @@ export async function loginToHh(
   try {
     logger.debug("Запускаем браузер Chromium", {
       headless,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--enable-logging=stderr",
-        "--v=1",
-        "--disable-background-networking=false",
-      ],
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--start-maximized"],
+      ignoreDefaultArgs: ["--no-startup-window"],
     });
     browser = await chromium.launch({
       headless,
       timeout: 300000, // 5 minutes launch timeout
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--enable-logging=stderr",
-        "--v=1",
-        "--start-maximized",
-        "--remote-debugging-port=0", // instead of pipe, use port - more stable on Windows!
-      ],
-      ignoreDefaultArgs: true, // отключаем все дефолтные args!
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--start-maximized"],
+      ignoreDefaultArgs: ["--no-startup-window"],
       handleSIGHUP: false,
       handleSIGINT: false,
       handleSIGTERM: false,
