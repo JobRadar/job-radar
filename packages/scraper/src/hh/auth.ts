@@ -132,7 +132,9 @@ export async function loginToHh(
         "--enable-logging=stderr",
         "--v=1",
         "--start-maximized",
+        "--remote-debugging-port=0", // instead of pipe, use port - more stable on Windows!
       ],
+      ignoreDefaultArgs: true, // отключаем все дефолтные args!
       handleSIGHUP: false,
       handleSIGINT: false,
       handleSIGTERM: false,
