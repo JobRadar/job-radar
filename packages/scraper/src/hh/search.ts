@@ -26,6 +26,9 @@ export function buildSearchUrl(options: HhSearchOptions, page = 0): string {
   if (options.salaryFrom) params.set("salary", String(options.salaryFrom));
   if (options.experience) params.set("experience", options.experience);
   if (options.employment) params.set("employment", options.employment);
+  if (options.workFormat?.length) {
+    params.set("work_format", options.workFormat.join(","));
+  }
 
   return `${HH_SEARCH_URL}?${params.toString()}`;
 }

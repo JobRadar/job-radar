@@ -5,6 +5,7 @@ import {
   getScraperConfig,
   resolveCookies,
   searchVacancies,
+  type WorkFormat,
 } from "@job-radar/scraper";
 import { hatchet } from "../client";
 
@@ -71,6 +72,18 @@ const initRun = scrapeHhWorkflow.task({
       throw new Error("Не удалось создать запись ScrapeRun");
     }
 
+    // Парсим CSV со списком форматов работы ("REMOTE,HYBRID").
+    // Значения приходят из БД, куда попали через контролируемые валидаторы —
+    // отфильтровываем всё, что не соответствует типу WorkFormat.
+    const workFormatRaw = keyword.workFormat ?? null;
+    const ALLOWED = new Set(["REMOTE", "OFFICE", "HYBRID", "FIELD_WORK"]);
+    const workFormat: WorkFormat[] | undefined = workFormatRaw
+      ? (workFormatRaw
+          .split(",")
+          .map((v) => v.trim())
+          .filter((v): v is WorkFormat => ALLOWED.has(v)))
+      : undefined;
+
     return {
       scrapeRunId: scrapeRun.id,
       keywordId: keyword.id,
@@ -79,6 +92,7 @@ const initRun = scrapeHhWorkflow.task({
       area: keyword.area,
       experience: keyword.experience ?? undefined,
       employment: keyword.employment ?? undefined,
+      workFormat,
       maxPages: input.maxPages,
     };
   },
@@ -99,6 +113,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
       area,
       experience,
       employment,
+      workFormat,
       maxPages,
     } = await ctx.parentOutput(initRun);
 
@@ -123,6 +138,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
         area: area ?? 113,
         experience: experience ?? undefined,
         employment: employment ?? undefined,
+        workFormat,
         maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
       },
       config,

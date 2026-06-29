@@ -19,6 +19,7 @@ export const list = protectedProcedure.handler(async ({ context }) => {
       salaryTo: SearchKeyword.salaryTo,
       experience: SearchKeyword.experience,
       employment: SearchKeyword.employment,
+      workFormat: SearchKeyword.workFormat,
       isActive: SearchKeyword.isActive,
       createdAt: SearchKeyword.createdAt,
     })

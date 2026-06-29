@@ -8,6 +8,9 @@ export interface HhSalary {
   gross: boolean;
 }
 
+/** Допустимые значения фильтра work_format на hh.ru */
+export type WorkFormat = "REMOTE" | "OFFICE" | "HYBRID" | "FIELD_WORK";
+
 /** Параметры поискового запроса к hh.ru */
 export interface HhSearchOptions {
   keyword: string;
@@ -19,6 +22,12 @@ export interface HhSearchOptions {
   experience?: string;
   /** full | part | project | volunteer | probation */
   employment?: string;
+  /**
+   * Формат работы: REMOTE, OFFICE, HYBRID, FIELD_WORK.
+   * Можно передать несколько значений — они объединятся через запятую
+   * в параметре `work_format`. Если не указано — фильтр не применяется.
+   */
+  workFormat?: WorkFormat[];
   /** Максимальное число страниц выдачи (20 вакансий / стр). По умолчанию 5. */
   maxPages?: number;
 }

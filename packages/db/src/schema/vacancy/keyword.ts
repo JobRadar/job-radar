@@ -26,6 +26,12 @@ export const SearchKeyword = pgTable("search_keywords", (t) => ({
   experience: t.varchar({ length: 32 }),
   /** Тип занятости: full | part | project | volunteer | probation */
   employment: t.varchar({ length: 32 }),
+  /**
+   * Формат работы: REMOTE, OFFICE, HYBRID, FIELD_WORK.
+   * Хранится как CSV, например "REMOTE,HYBRID".
+   * Используется как фильтр work_format на hh.ru.
+   */
+  workFormat: t.varchar({ length: 64 }),
   isActive: t.boolean().default(true).notNull(),
   createdAt: t.timestamp().defaultNow().notNull(),
   updatedAt: t
@@ -44,6 +50,7 @@ export const CreateSearchKeywordSchema = createInsertSchema(SearchKeyword, {
   employment: z
     .enum(["full", "part", "project", "volunteer", "probation"])
     .optional(),
+  workFormat: z.string().max(64).optional(),
 }).omit({
   id: true,
   createdAt: true,

@@ -8,4 +8,5 @@ export type {
   ScrapedVacancyDetails,
   ScrapedVacancySummary,
   ScrapeResult,
+  WorkFormat,
 } from "./types";

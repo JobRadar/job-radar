@@ -23,6 +23,7 @@ export const create = protectedProcedure
         salaryTo: input.salaryTo,
         experience: input.experience,
         employment: input.employment,
+        workFormat: input.workFormat,
         isActive: input.isActive,
       })
       .returning();

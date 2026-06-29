@@ -27,6 +27,7 @@ export default async function KeywordsPage() {
     salaryTo: k.salaryTo,
     experience: k.experience,
     employment: k.employment,
+    workFormat: k.workFormat,
     isActive: k.isActive,
     createdAt: k.createdAt,
   }));

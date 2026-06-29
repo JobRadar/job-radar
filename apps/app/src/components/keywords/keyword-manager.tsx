@@ -36,6 +36,24 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   moreThan6: "Более 6 лет",
 };
 
+const WORK_FORMAT_LABELS: Record<string, string> = {
+  REMOTE: "Удалённо",
+  OFFICE: "Офис",
+  HYBRID: "Гибрид",
+  FIELD_WORK: "Разъездная",
+};
+
+const ALL_WORK_FORMATS = ["REMOTE", "OFFICE", "HYBRID", "FIELD_WORK"] as const;
+
+/** Разбираем CSV из БД в массив. */
+function parseWorkFormat(raw: string | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+}
+
 export interface KeywordItem {
   id: string;
   keyword: string;
@@ -46,6 +64,7 @@ export interface KeywordItem {
   salaryTo: number | null;
   experience: string | null;
   employment: string | null;
+  workFormat: string | null;
   isActive: boolean;
   createdAt: Date;
 }
@@ -63,6 +82,9 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
   const [categoryId, setCategoryId] = useState<string>(NO_CATEGORY);
   const [area, setArea] = useState("113");
   const [experience, setExperience] = useState<string>("any");
+  // Создание по умолчанию ищет удалёнку — самый частый сценарий
+  const [workFormat, setWorkFormat] =
+    useState<typeof ALL_WORK_FORMATS[number][]>(["REMOTE"]);
 
   async function invalidate() {
     await queryClient.invalidateQueries({ queryKey: orpc.keyword.key() });
@@ -77,6 +99,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
       setCategoryId(NO_CATEGORY);
       setArea("113");
       setExperience("any");
+      setWorkFormat(["REMOTE"]);
       await invalidate();
     },
     onError: (err: Error) =>
@@ -102,6 +125,12 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     onError: (err: Error) => toast.error(err.message || "Не удалось удалить"),
   });
 
+  function toggleWorkFormatCreate(value: typeof ALL_WORK_FORMATS[number]) {
+    setWorkFormat((curr) =>
+      curr.includes(value) ? curr.filter((v) => v !== value) : [...curr, value],
+    );
+  }
+
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!keyword.trim()) {
@@ -116,26 +145,13 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
         experience === "any"
           ? undefined
           : (experience as KeywordItem["experience"] as never),
+      workFormat: workFormat.length > 0 ? (workFormat as never) : null,
       isActive: true,
     });
   }
 
-  function changeCategory(row: KeywordItem, value: string) {
-    updateMutation.mutate({
-      id: row.id,
-      keyword: row.keyword,
-      categoryId: value === NO_CATEGORY ? null : value,
-      area: row.area,
-      salaryFrom: row.salaryFrom ?? undefined,
-      salaryTo: row.salaryTo ?? undefined,
-      experience: (row.experience ?? undefined) as never,
-      employment: (row.employment ?? undefined) as never,
-      isActive: row.isActive,
-    });
-  }
-
-  function toggleActive(row: KeywordItem, next: boolean) {
-    updateMutation.mutate({
+  function buildUpdatePayload(row: KeywordItem) {
+    return {
       id: row.id,
       keyword: row.keyword,
       categoryId: row.categoryId,
@@ -144,7 +160,32 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
       salaryTo: row.salaryTo ?? undefined,
       experience: (row.experience ?? undefined) as never,
       employment: (row.employment ?? undefined) as never,
-      isActive: next,
+      isActive: row.isActive,
+    };
+  }
+
+  function changeCategory(row: KeywordItem, value: string) {
+    updateMutation.mutate({
+      ...buildUpdatePayload(row),
+      categoryId: value === NO_CATEGORY ? null : value,
+    });
+  }
+
+  function toggleActive(row: KeywordItem, next: boolean) {
+    updateMutation.mutate({ ...buildUpdatePayload(row), isActive: next });
+  }
+
+  function toggleWorkFormat(
+    row: KeywordItem,
+    value: (typeof ALL_WORK_FORMATS)[number],
+  ) {
+    const current = parseWorkFormat(row.workFormat);
+    const next = current.includes(value)
+      ? current.filter((v) => v !== value)
+      : [...current, value];
+    updateMutation.mutate({
+      ...buildUpdatePayload(row),
+      workFormat: next.length > 0 ? (next as never) : null,
     });
   }
 
@@ -226,6 +267,29 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
             </Button>
           </div>
         </div>
+        <div className="space-y-2 sm:col-span-2 lg:col-span-5">
+          <Label>Формат работы</Label>
+          <div className="flex flex-wrap gap-2">
+            {ALL_WORK_FORMATS.map((fmt) => {
+              const checked = workFormat.includes(fmt);
+              return (
+                <label
+                  key={fmt}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => toggleWorkFormatCreate(fmt)}
+                  />
+                  <span>{WORK_FORMAT_LABELS[fmt]}</span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Пусто — без фильтра. Несколько значений объединяются через «или».
+          </p>
+        </div>
       </form>
 
       {/* Список */}
@@ -236,6 +300,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
               <TableHead className="w-[30%]">Ключевое слово</TableHead>
               <TableHead className="w-[220px]">Категория</TableHead>
               <TableHead className="hidden md:table-cell">Опыт</TableHead>
+              <TableHead>Формат работы</TableHead>
               <TableHead className="w-[120px]">Активно</TableHead>
               <TableHead className="w-[60px]" />
             </TableRow>
@@ -244,7 +309,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
             {items.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-muted-foreground h-32 text-center"
                 >
                   <div className="flex flex-col items-center gap-2">
@@ -254,66 +319,93 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.keyword}</TableCell>
-                  <TableCell>
-                    <Select
-                      value={row.categoryId ?? NO_CATEGORY}
-                      onValueChange={(v) => changeCategory(row, v)}
-                      disabled={isMutating}
-                    >
-                      <SelectTrigger className="w-full" size="sm">
-                        <SelectValue placeholder="Без категории" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NO_CATEGORY}>
-                          Без категории
-                        </SelectItem>
-                        {categories.map((c) => (
-                          <SelectItem key={c.id} value={c.id}>
-                            {c.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <span className="text-muted-foreground text-sm">
-                      {row.experience
-                        ? (EXPERIENCE_LABELS[row.experience] ?? row.experience)
-                        : "—"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={row.isActive}
-                        onCheckedChange={(c) => toggleActive(row, c === true)}
+              items.map((row) => {
+                const formats = parseWorkFormat(row.workFormat);
+                return (
+                  <TableRow key={row.id}>
+                    <TableCell className="font-medium">{row.keyword}</TableCell>
+                    <TableCell>
+                      <Select
+                        value={row.categoryId ?? NO_CATEGORY}
+                        onValueChange={(v) => changeCategory(row, v)}
                         disabled={isMutating}
-                        aria-label={`Активность ${row.keyword}`}
-                      />
-                      {row.isActive ? (
-                        <Badge variant="outline">Вкл</Badge>
-                      ) : (
-                        <Badge variant="secondary">Выкл</Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive size-8"
-                      onClick={() => handleDelete(row)}
-                      disabled={isMutating}
-                      aria-label={`Удалить ${row.keyword}`}
-                    >
-                      <IconTrash className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                      >
+                        <SelectTrigger className="w-full" size="sm">
+                          <SelectValue placeholder="Без категории" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NO_CATEGORY}>
+                            Без категории
+                          </SelectItem>
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <span className="text-muted-foreground text-sm">
+                        {row.experience
+                          ? (EXPERIENCE_LABELS[row.experience] ?? row.experience)
+                          : "—"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {ALL_WORK_FORMATS.map((fmt) => {
+                          const active = formats.includes(fmt);
+                          return (
+                            <button
+                              key={fmt}
+                              type="button"
+                              onClick={() => toggleWorkFormat(row, fmt)}
+                              disabled={isMutating}
+                              className="focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
+                              aria-label={`${WORK_FORMAT_LABELS[fmt]} для ${row.keyword}`}
+                            >
+                              <Badge
+                                variant={active ? "default" : "outline"}
+                                className="cursor-pointer"
+                              >
+                                {WORK_FORMAT_LABELS[fmt]}
+                              </Badge>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Checkbox
+                          checked={row.isActive}
+                          onCheckedChange={(c) => toggleActive(row, c === true)}
+                          disabled={isMutating}
+                          aria-label={`Активность ${row.keyword}`}
+                        />
+                        {row.isActive ? (
+                          <Badge variant="outline">Вкл</Badge>
+                        ) : (
+                          <Badge variant="secondary">Выкл</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive size-8"
+                        onClick={() => handleDelete(row)}
+                        disabled={isMutating}
+                        aria-label={`Удалить ${row.keyword}`}
+                      >
+                        <IconTrash className="size-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

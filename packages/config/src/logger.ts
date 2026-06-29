@@ -1,16 +1,3 @@
-import { appendFileSync, existsSync, mkdirSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
-/**
- * Minimal dependency-free structured logger.
- *
- * Emits one JSON line per entry so logs are machine-parseable in any
- * environment (Vercel, Docker, etc.) and play nicely with log drains and
- * OpenTelemetry collectors. This is the single sanctioned place in the
- * codebase that is allowed to call `console.*`.
- */
-
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 type LogMeta = Record<string, unknown>;
@@ -21,20 +8,6 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
   warn: 30,
   error: 40,
 };
-
-// Путь к файлу логов (в корне проекта, storage/logs)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const rootDir = join(__dirname, "../../..");
-const LOG_FILE_PATH = join(rootDir, "storage", "logs", "scraper.log");
-
-// Убеждаемся, что директория для логов существует
-function ensureLogDir() {
-  const logDir = dirname(LOG_FILE_PATH);
-  if (!existsSync(logDir)) {
-    mkdirSync(logDir, { recursive: true });
-  }
-}
 
 function resolveMinLevel(): LogLevel {
   const fromEnv = process.env.LOG_LEVEL?.toLowerCase();
@@ -65,25 +38,16 @@ function write(level: LogLevel, message: string, meta?: LogMeta): void {
     ...meta,
   };
 
-  const line = JSON.stringify(entry) + "\n";
+  const line = JSON.stringify(entry);
 
   // biome-ignore lint/suspicious/noConsole: the logger is the sanctioned console boundary
-  if (level === "error") console.error(line.trim());
+  if (level === "error") console.error(line);
   // biome-ignore lint/suspicious/noConsole: the logger is the sanctioned console boundary
-  else if (level === "warn") console.warn(line.trim());
+  else if (level === "warn") console.warn(line);
   // biome-ignore lint/suspicious/noConsole: the logger is the sanctioned console boundary
-  else console.log(line.trim());
-
-  // Записываем в файл
-  try {
-    ensureLogDir();
-    appendFileSync(LOG_FILE_PATH, line, "utf-8");
-  } catch (fileError) {
-    console.error("Не удалось записать лог в файл:", fileError);
-  }
+  else console.log(line);
 }
 
-// Перехват необработанных исключений и unhandled rejections
 function setupGlobalErrorHandlers() {
   process.on("uncaughtException", (error) => {
     logger.error("Необработанное исключение", error, { type: "uncaughtException" });
@@ -112,4 +76,3 @@ export const logger = {
 };
 
 export type Logger = typeof logger;
-export { LOG_FILE_PATH };
