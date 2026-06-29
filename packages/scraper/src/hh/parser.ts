@@ -328,25 +328,6 @@ export function htmlToText(root: Element): string {
 }
 
 /**
- * Shorthand для querySelector + textContent.
- */
-export function queryText(doc: Document, sel: string): string | null {
-  return doc.querySelector(sel)?.textContent?.trim() ?? null;
-}
-
-/**
- * Извлекает формат работы (расписание) из страницы вакансии.
- * Поддерживает как старый дизайн, так и Magritte.
- */
-export function parseScheduleFromDoc(doc: Document): string | null {
-  const raw =
-    queryText(doc, '[data-qa="work-formats-text"]') ??
-    queryText(doc, '[data-qa="vacancy-view-work-format"]');
-  if (!raw) return null;
-  return raw.replace(/^формат\s+работы\s*:\s*/i, "").trim() || null;
-}
-
-/**
  * Парсит полную страницу вакансии hh.ru.
  */
 export async function parseVacancyPage(
@@ -360,9 +341,25 @@ export async function parseVacancyPage(
       url: page.url(),
       hhId: summary.hhId,
     });
-    details = await page.evaluate(() => {
+
+    type EvalResult = {
+      description: string | null;
+      descTextLen: number;
+      descHTMLpreview: string;
+      hiringFormats: string[];
+      skills: string[];
+      experience: string | null;
+      employment: string | null;
+      scheduleRaw: string | null;
+      employerLogoUrl: string | null;
+    };
+
+    const evalResult: EvalResult = await page.evaluate(() => {
       const descEl = document.querySelector('[data-qa="vacancy-description"]');
-      const description = descEl ? htmlToText(descEl) : null;
+      const descTextLen = descEl?.textContent?.trim().length ?? 0;
+      const descHTMLpreview = descEl?.innerHTML.slice(0, 300) ?? "NOT FOUND";
+      const description = descEl?.textContent?.trim() ?? null;
+
       const hiringFormatsEl = document.querySelector(
         'div[data-qa="vacancy-hiring-formats"]',
       );
@@ -388,22 +385,56 @@ export async function parseVacancyPage(
         '[data-qa="vacancy-company-logo"] img',
       ) as HTMLImageElement | null;
 
+      const workFormatsEl = document.querySelector(
+        '[data-qa="work-formats-text"], [data-qa="vacancy-view-work-format"]',
+      );
+      const scheduleRaw = workFormatsEl?.textContent?.trim() ?? null;
+
       return {
         description,
+        descTextLen,
+        descHTMLpreview,
         hiringFormats,
         skills,
         experience:
-          queryText(document, '[data-qa="vacancy-experience"]') ??
-          queryText(document, '[data-qa="vacancy-view-employment-mode"]'),
-        employment: queryText(
-          document,
-          '[data-qa="vacancy-view-employment-mode"]',
-        ),
-        schedule: parseScheduleFromDoc(document),
+          document
+            .querySelector('[data-qa="vacancy-experience"]')
+            ?.textContent?.trim() ??
+          document
+            .querySelector('[data-qa="vacancy-view-employment-mode"]')
+            ?.textContent?.trim() ??
+          null,
+        employment:
+          document
+            .querySelector('[data-qa="vacancy-view-employment-mode"]')
+            ?.textContent?.trim() ?? null,
+        scheduleRaw,
         employerLogoUrl: logoEl?.src ?? null,
       };
     });
-  } catch {
+
+    logger.info("parseVacancyPage: результат evaluate", {
+      descTextLen: evalResult.descTextLen,
+      descPreview: evalResult.descHTMLpreview,
+      descriptionLen: evalResult.description?.length ?? 0,
+    });
+
+    const scheduleClean = evalResult.scheduleRaw
+      ? evalResult.scheduleRaw.replace(/^формат\s+работы\s*:\s*/i, "").trim() ||
+        null
+      : null;
+
+    details = {
+      description: evalResult.description,
+      hiringFormats: evalResult.hiringFormats,
+      skills: evalResult.skills,
+      experience: evalResult.experience,
+      employment: evalResult.employment,
+      schedule: scheduleClean,
+      employerLogoUrl: evalResult.employerLogoUrl,
+    };
+  } catch (err) {
+    logger.error("parseVacancyPage: evaluate выбросил ошибку", err);
     details = null;
   }
 
