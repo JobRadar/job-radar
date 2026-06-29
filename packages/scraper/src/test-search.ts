@@ -1,4 +1,8 @@
-import { type Browser, type Cookie, type Page, chromium } from "playwright";
+import { logger } from "@job-radar/config";
+import type {
+  HhSearchOptions,
+  ScrapedVacancyDetails,
+} from "@job-radar/scraper";
 import {
   buildSearchUrl,
   getNextPageUrl,
@@ -7,8 +11,7 @@ import {
   parseVacancyPage,
   resolveCookies,
 } from "@job-radar/scraper";
-import { logger } from "@job-radar/config";
-import type { HhSearchOptions, ScrapedVacancyDetails } from "@job-radar/scraper";
+import { type Browser, type Cookie, chromium, type Page } from "playwright";
 
 // User-Agent реального браузера для маскировки
 const DESKTOP_UA =
@@ -118,7 +121,10 @@ async function scrapeVacancies(
     }
 
     const page: Page = await context.newPage();
-    const summaries = new Map<string, Awaited<ReturnType<typeof parseSearchPage>>[0]>();
+    const summaries = new Map<
+      string,
+      Awaited<ReturnType<typeof parseSearchPage>>[0]
+    >();
 
     // Сбрасываем积累tracking при старте
     await page.addInitScript(() => {
@@ -128,12 +134,14 @@ async function scrapeVacancies(
     // Обход страниц поисковой выдачи
     for (let pageNum = 0; pageNum < maxPages; pageNum++) {
       const searchUrl = buildSearchUrl(options, pageNum);
-      logger.info(`Загрузка страницы ${pageNum + 1}/${maxPages}`, { url: searchUrl });
+      logger.info(`Загрузка страницы ${pageNum + 1}/${maxPages}`, {
+        url: searchUrl,
+      });
 
       // Задержка перед каждым запросом — имитация пользователя
       await humanDelay();
 
-      await page.goto(searchUrl, { waitUntil: "networkidle", timeout: 60_000 });
+      await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
 
       // Имитация скролла страницы (сбрасывает "прочитанное")
       await page.evaluate(() => {
@@ -155,11 +163,15 @@ async function scrapeVacancies(
         const content = await page.content();
         const hasContent = content.length > 5000;
         if (!hasContent) {
-          errors.push(`Страница ${pageNum + 1} не загрузилась (пустой контент)`);
+          errors.push(
+            `Страница ${pageNum + 1} не загрузилась (пустой контент)`,
+          );
           continue;
         }
         // Если контент есть, но селекторы не нашлись — пробуем продолжить
-        logger.warn(`Селекторы не найдены на странице ${pageNum + 1}, продолжаем...`);
+        logger.warn(
+          `Селекторы не найдены на странице ${pageNum + 1}, продолжаем...`,
+        );
       }
 
       pagesScraped++;
@@ -192,7 +204,10 @@ async function scrapeVacancies(
       await humanDelay(800, 2000);
 
       try {
-        await page.goto(vacancyUrl, { waitUntil: "networkidle", timeout: 30_000 });
+        await page.goto(vacancyUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 60_000,
+        });
 
         // Имитация чтения страницы вакансии
         await page.evaluate(() => {
@@ -227,9 +242,9 @@ async function scrapeVacancies(
         const details = await parseVacancyPage(page, summary);
         vacancies.push(details);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+        const msg = err instanceof Error ? err.message : JSON.stringify(err);
         errors.push(`Ошибка парсинга вакансии ${hhId}: ${msg}`);
-        logger.error(`Ошибка парсинга ${hhId}`, { error: msg });
+        logger.error(`Ошибка парсинга ${hhId}`, undefined, { error: msg });
         // Добавляем хотя бы краткие данные
         vacancies.push({
           ...summary,
@@ -287,7 +302,9 @@ function printResults(result: ScrapeResult): void {
     console.log(`   Опыт: ${v.experience ?? "—"}`);
     console.log(`   Формат: ${v.schedule ?? "—"}`);
     if (v.skills.length > 0) {
-      console.log(`   Навыки: ${v.skills.slice(0, 5).join(", ")}${v.skills.length > 5 ? "..." : ""}`);
+      console.log(
+        `   Навыки: ${v.skills.slice(0, 5).join(", ")}${v.skills.length > 5 ? "..." : ""}`,
+      );
     }
     console.log(`   Ссылка: ${v.url}`);
   }
@@ -345,7 +362,11 @@ async function main() {
   // 4) Сохраняем в файл если указан
   if (cli.outputFile) {
     const fs = await import("fs/promises");
-    await fs.writeFile(cli.outputFile, JSON.stringify(result, null, 2), "utf-8");
+    await fs.writeFile(
+      cli.outputFile,
+      JSON.stringify(result, null, 2),
+      "utf-8",
+    );
     logger.info(`Результат сохранён в ${cli.outputFile}`);
     console.log(`\n💾 Результат сохранён в: ${cli.outputFile}`);
   }

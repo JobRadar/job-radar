@@ -136,35 +136,14 @@ const scrapeAndSave = scrapeHhWorkflow.task({
       headless: true,
     });
 
-    // Запускаем скрапинг
-    const result = await searchVacancies(
-      {
-        keyword,
-        area: area ?? 113,
-        experience: experience ?? undefined,
-        employment: employment ?? undefined,
-        workFormat,
-        maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
-      },
-      // Воркер также форсирует headless для фазы поиска — на сервере
-      // нет дисплея, а .env может содержать `HH_SCRAPER_HEADLESS=false`
-      // для удобства локального CLI‑запуска.
-      { ...config, headless: true },
-      cookies,
-    );
-
-    // Upsert вакансий в БД
-    let vacanciesNew = 0;
-    for (const v of result.vacancies) {
-      if (!v.hhId) continue;
-
+    // Upsert одной вакансии в БД
+    const upsertVacancy = async (v: typeof result.vacancies[number]) => {
+      if (!v.hhId) return;
       const existing = await db.query.Vacancy.findFirst({
         where: eq(Vacancy.hhId, v.hhId),
         columns: { id: true },
       });
-
       if (existing) {
-        // Обновляем данные существующей вакансии (могли измениться условия)
         await db
           .update(Vacancy)
           .set({
@@ -201,8 +180,33 @@ const scrapeAndSave = scrapeHhWorkflow.task({
           url: v.url,
           publishedAt: v.publishedAt ?? undefined,
         });
-        vacanciesNew++;
       }
+    };
+
+    // Запускаем скрапинг — каждая вакансия сохраняется сразу после парсинга
+    const result = await searchVacancies(
+      {
+        keyword,
+        area: area ?? 113,
+        experience: experience ?? undefined,
+        employment: employment ?? undefined,
+        workFormat,
+        maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
+        onVacancy: upsertVacancy,
+      },
+      { ...config, headless: true },
+      cookies,
+    );
+
+    // Подсчёт: сколько оказалось новых vs обновлённых
+    let vacanciesNew = 0;
+    for (const v of result.vacancies) {
+      if (!v.hhId) continue;
+      const existing = await db.query.Vacancy.findFirst({
+        where: eq(Vacancy.hhId, v.hhId),
+        columns: { id: true },
+      });
+      if (!existing) vacanciesNew++;
     }
 
     // Обновляем прогон

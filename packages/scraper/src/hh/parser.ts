@@ -262,7 +262,9 @@ export async function parseVacancyPage(
   page: Page,
   summary: ScrapedVacancySummary,
 ): Promise<ScrapedVacancyDetails> {
-  const details = await page.evaluate(() => {
+  let details: Omit<ScrapedVacancyDetails, keyof ScrapedVacancySummary> | null = null;
+  try {
+    details = await page.evaluate(() => {
     /**
      * Конвертирует DOM-элемент в читаемый plain text.
      *
@@ -396,7 +398,25 @@ export async function parseVacancyPage(
       })(),
       employerLogoUrl: logoEl?.src ?? null,
     };
-  });
+    });
+  } catch {
+    // HH.ru иногда блокирует парсинг (антибот-детекция) — при ошибке
+    // page.evaluate возвращаем null, чтобы сохранить краткие данные из summary
+    details = null;
+  }
+
+  if (details === null) {
+    return {
+      ...summary,
+      description: null,
+      hiringFormats: [],
+      skills: [],
+      experience: null,
+      employment: null,
+      schedule: null,
+      employerLogoUrl: null,
+    };
+  }
 
   return { ...summary, ...details };
 }

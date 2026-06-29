@@ -57,6 +57,7 @@ export async function searchVacancies(
   const summaries = new Map<string, ScrapedVacancySummary>();
   const errors: string[] = [];
   let pagesScraped = 0;
+  const { onVacancy } = options;
 
   // Изолируем хранилище crawlee для каждого запуска
   const storageDir = `${config.storageDir}/${Date.now()}`;
@@ -165,12 +166,12 @@ export async function searchVacancies(
         try {
           const details = await parseVacancyPage(page, summary);
           vacancies.push(details);
+          if (onVacancy) await onVacancy(details);
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
+          const msg = err instanceof Error ? err.message : JSON.stringify(err);
           errors.push(`Ошибка парсинга вакансии ${hhId}: ${msg}`);
-          log.error(`Ошибка парсинга вакансии ${hhId}`, { error: msg });
-          // Добавляем хотя бы краткие данные
-          vacancies.push({
+          log.error(`Ошибка парсинга вакансии ${hhId}`, { error: { message: msg } });
+          const fallback: ScrapedVacancyDetails = {
             ...summary,
             description: null,
             hiringFormats: [],
@@ -179,7 +180,9 @@ export async function searchVacancies(
             employment: null,
             schedule: null,
             employerLogoUrl: null,
-          });
+          };
+          vacancies.push(fallback);
+          if (onVacancy) await onVacancy(fallback);
         }
       }
     },
