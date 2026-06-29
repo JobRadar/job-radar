@@ -127,7 +127,10 @@ async function scrapeFirstVacancy(
     logger.info("Загрузка страницы поиска", { url: searchUrl });
 
     await humanDelay();
-    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.goto(searchUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
 
     await page.evaluate(() => {
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -154,7 +157,10 @@ async function scrapeFirstVacancy(
     logger.info(`Парсинг первой вакансии: ${first.hhId} — ${first.title}`);
 
     await humanDelay(800, 2000);
-    await page.goto(first.url, { waitUntil: "domcontentloaded", timeout: 60_000 });
+    await page.goto(first.url, {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
 
     await page.evaluate(() => {
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -166,11 +172,20 @@ async function scrapeFirstVacancy(
     await scrollDelay();
 
     try {
-      await page.waitForSelector('[data-qa="vacancy-title"]', { timeout: 10_000 });
-      // Описание и формат работы подгружаются реактивно
+      await page.waitForSelector('[data-qa="vacancy-title"]', {
+        timeout: 10_000,
+      });
       await Promise.all([
-        page.waitForSelector('[data-qa="vacancy-description"]', { timeout: 15_000 }),
-        page.waitForSelector('p[data-qa="work-formats-text"]', { timeout: 15_000 }),
+        page.waitForFunction(
+          () => {
+            const el = document.querySelector('[data-qa="vacancy-description"]');
+            return el && (el.textContent?.trim()?.length ?? 0) > 10;
+          },
+          { timeout: 15_000 },
+        ),
+        page.waitForSelector('p[data-qa="work-formats-text"]', {
+          timeout: 15_000,
+        }),
       ]);
     } catch {
       errors.push(`Не удалось загрузить страницу вакансии ${first.hhId}`);

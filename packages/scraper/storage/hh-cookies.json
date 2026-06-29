@@ -1,0 +1,566 @@
+[
+  {
+    "name": "__ddg9_",
+    "value": "92.36.22.250",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1782721380.616321,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "__ddg1_",
+    "value": "UwPEAnzoZjmsgpvfQQmJ",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256174.153173,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "regions",
+    "value": "1",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1814256174.153275,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "region_clarified",
+    "value": "NOT_SET",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256174.153368,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "display",
+    "value": "desktop",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "crypted_hhuid",
+    "value": "40B429B2C201C2973131D4C3715A3BAC263D784509721CB6911A7D7308056710",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_xsrf",
+    "value": "b05a01ff6124385639184272e2a588e4",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "hhuid",
+    "value": "pz5FcAWdK8iQ3WpCJrEqJQ--",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1817280184.433454,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "GMT",
+    "value": "3",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "remixlang",
+    "value": "0",
+    "domain": ".vk.com",
+    "path": "/",
+    "expires": 1813886124.053967,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "remixstlid",
+    "value": "9110036890218423783_Smief8yxFeIlT9L1T6aYhJDJLUIVJzS2PNYeqDhzEcL",
+    "domain": ".vk.com",
+    "path": "/",
+    "expires": 1814256176.054034,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "dspid",
+    "value": "4bffb5da-4a3d-4351-8b3e-2fad327a6ddf",
+    "domain": ".mts.ru",
+    "path": "/",
+    "expires": 1813478576.075754,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "reset_cookie",
+    "value": "1",
+    "domain": ".mts.ru",
+    "path": "/",
+    "expires": 1813478576.07598,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "tmr_lvid",
+    "value": "fdf303cd43004906c430d7fe90c96e8f",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1811491382,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tmr_lvidTS",
+    "value": "1782720176102",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1811491382,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "_ym_uid",
+    "value": "1782720177931588698",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256176,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_ym_d",
+    "value": "1782720177",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256176,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_ym_isad",
+    "value": "2",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1782792176,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "ymex",
+    "value": "2098080179.yrts.1782720179#2098080179.yrtsi.1782720179",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1814256179,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "yabs-sid",
+    "value": "1689346001782720179",
+    "domain": "mc.yandex.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "i",
+    "value": "qAoUoRQdrQgG9nzjqh7nsp+2lZazdZtdc8pLJ+uY03uUoUFmPUp6xCK01vbg+mR6m2MzNw+brkHLvAHP+J3ZaYLI5O4=",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280176.624438,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "yandexuid",
+    "value": "2319628371782720179",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280176.62451,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "yuidss",
+    "value": "2319628371782720179",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280176.624573,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_ym_visorc",
+    "value": "b",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1782721982,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_TADUID",
+    "value": "13500360054673469058",
+    "domain": ".targetads.io",
+    "path": "/",
+    "expires": 1814256182.541564,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "TZ",
+    "value": "Europe%2FMoscow",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "device_magritte_breakpoint",
+    "value": "l",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1783929782,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "HOSTILE_ON",
+    "value": "0",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "device_breakpoint",
+    "value": "m",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1783929782,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "domain_sid",
+    "value": "6dZsksHV-537g4SEInEci%3A1782720177860",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1783324977.861819,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "AFFICHE_W",
+    "value": "ZFa2ft-P7V1k78",
+    "domain": ".weborama-tech.ru",
+    "path": "/",
+    "expires": 1816675378.079842,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "crypted_id",
+    "value": "2AC0A94964F25992889AA48B37C728FDA5471C6F722104504734B32F0D03E9F8",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "just_logged_in",
+    "value": "1",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1782720193.912073,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "hhtoken",
+    "value": "lVdW8nLhyTATh9iHYnSvVsmVFQZd",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1817280178.912587,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "_hi",
+    "value": "192246233",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "hhul",
+    "value": "d8f8c425d2df46d078429a571a2b720ef250d78953972a04f0ddb919b3a3dae9",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1817280180.461388,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "hhrole",
+    "value": "applicant",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "__zzatgib-w-hh",
+    "value": "MDA0dC0jViV+FmELHw4/aQsbSl1pCENQGC9LX3YsPB4haEdhVXZdTjdYSkV6JCpWDj8YQUQrel9sZyQYOVURCxIXRF5cVWl1FRpLSiVueCplJS0xViR8SylEXFV7LBsReHMlVgkUVy8NPjteLW8PJwsSWAkhCklpC15zXV8WPkQhbAs4LBtFOA8teB1keEdXa1YbFX8kKgs7EBZFRXB0Xj1uJWNOF1BFDk42Jx4YCGsqUAoUFUVJJi0bN1ddHBEkWA4hPwsXXFU+NVQOPHVXLw0uOF4tbx5mT1smRVVOCScgE39nFRtQSxgvS18zWn4lDzRDS1sKFA4/VFFCQisVWVJ1KW59OjAbRVceaElbI0lXUHwXFXs/KGUaQE4nL0tfPm16L04efEsbNSEOPloLG3hyK1EODVs+SW96K0NhDysYIVQ1Xz9BYUpKPTdYH0t1MBI=bPEXZw==",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256182,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "pi",
+    "value": "VhQFtXqZIVpK5h9i8i+4HYolWQV8HoOy8z1uAAzq+RZKoSR0HKZJ4ZVpcAsvRGv0dmPZQ8mmkOyK4vyrY7AcR8N2dTk=",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280183.092535,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://hh.ru",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "yashr",
+    "value": "1527849331782720186",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1814256186,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None",
+    "partitionKey": "https://hh.ru",
+    "_crHasCrossSiteAncestor": true
+  },
+  {
+    "name": "bh",
+    "value": "EkIiSGVhZGxlc3NDaHJvbWUiO3Y9IjE0OSIsICJDaHJvbWl1bSI7dj0iMTQ5IiwgIk5vdClBO0JyYW5kIjt2PSIyNCIaA3g4NiINMTQ5LjAuNzgyNy41NSoCPzA6CSJXaW5kb3dzIkIGMTUuMC4wSgI2NFJaIkhlYWRsZXNzQ2hyb21lIjt2PSIxNDkuMC43ODI3LjU1IiwiQ2hyb21pdW0iO3Y9IjE0OS4wLjc4MjcuNTUiLCJOb3QpQTtCcmFuZCI7dj0iMjQuMC4wLjAiYLrNiNIGah7cyuH/CJLYobEDn8/h6gP7+vDnDev//fYP9YTMhwg=",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280183.092951,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "uxs_uid",
+    "value": "f4574180-7390-11f1-9dc3-df7bdf114cc3",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1817280183.707786,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "gsscgib-w-hh",
+    "value": "U5+rV08lJ/srKAeXfD57IreKZ4O83qXjPNttfRaVIkcw+VmCqQez1OoRBsM3pmppttW0c0+xDZJ+HJFoDGGv8+T7ZLQdHV3rha4ttFlUrsmvuSce0n5KQ9aX3OT2P6GF2zt69qp0quc/plV3soIsjJmoMH/VDB/o7zWdv3rdqp8kO70hbzynvs0vCncl7iobhUUjoLBpIKQMmLsp+9RZjRiEeYZvk9dSFEbJgmGn+nRFkFkWMS7V0Ad7ragNPRozCBvwAxdZVQ==",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1814256183.911601,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "cfidsgib-w-hh",
+    "value": "EyuAFlQ86DUugRVI/tcRnniGStPyyBOFAWlJwiFcLfCaszYXQYZ2FbMiDgGCyg6amDGgFJRIC5bLxBYjussddkqZZRsdLho1BBAQHTLcPbmLpwdT1Xq7w/Sb2TGTgAtyvY9su6Yt6osweNip4OB51u4/3dYHdz0yA3LE",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1814256183.911773,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "cfidsgib-w-hh",
+    "value": "EyuAFlQ86DUugRVI/tcRnniGStPyyBOFAWlJwiFcLfCaszYXQYZ2FbMiDgGCyg6amDGgFJRIC5bLxBYjussddkqZZRsdLho1BBAQHTLcPbmLpwdT1Xq7w/Sb2TGTgAtyvY9su6Yt6osweNip4OB51u4/3dYHdz0yA3LE",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256184,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "gsscgib-w-hh",
+    "value": "U5+rV08lJ/srKAeXfD57IreKZ4O83qXjPNttfRaVIkcw+VmCqQez1OoRBsM3pmppttW0c0+xDZJ+HJFoDGGv8+T7ZLQdHV3rha4ttFlUrsmvuSce0n5KQ9aX3OT2P6GF2zt69qp0quc/plV3soIsjJmoMH/VDB/o7zWdv3rdqp8kO70hbzynvs0vCncl7iobhUUjoLBpIKQMmLsp+9RZjRiEeYZvk9dSFEbJgmGn+nRFkFkWMS7V0Ad7ragNPRozCBvwAxdZVQ==",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256184,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "fgsscgib-w-hh",
+    "value": "CdIqf036b553baf8e6941e2d25ca640ed2754813",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1814256184,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tmr_detect",
+    "value": "0%7C1782720184710",
+    "domain": "hh.ru",
+    "path": "/",
+    "expires": 1782806584,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "is_gdpr",
+    "value": "0",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280184.838981,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "is_gdpr_b",
+    "value": "COiHAhCzjQM=",
+    "domain": ".yandex.ru",
+    "path": "/",
+    "expires": 1817280184.839097,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "AFFICHE_W",
+    "value": "oRwRD5x0NFWh67",
+    "domain": ".weborama.fr",
+    "path": "/",
+    "expires": 1816675384.984539,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "rap_uid",
+    "value": "060d3cc5-6023-4273-9e6f-6115187e13cc",
+    "domain": ".skcrtxr.com",
+    "path": "/",
+    "expires": 1814256186.071696,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "rxt_pxids_0",
+    "value": "eyIyNDI3MjkyMS01ODJmLTRiYWYtOWRiYy02M2E3NzM2YmExMzgiOjE3ODI3MjAxODl9",
+    "domain": ".skcrtxr.com",
+    "path": "/",
+    "expires": 1814256186.071876,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "__ddg8_",
+    "value": "9SO3h6Tilpqbz6LL",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1782721380.615867,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "__ddg10_",
+    "value": "1782720183",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1782721380.61616,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "iap.uid",
+    "value": "7286015134684959876b99e6952a0726",
+    "domain": ".hh.ru",
+    "path": "/",
+    "expires": 1817280188.622611,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]
