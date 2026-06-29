@@ -128,7 +128,12 @@ const scrapeAndSave = scrapeHhWorkflow.task({
     const cookies = await resolveCookies({
       cookiesPath: config.cookiesPath,
       credentials,
-      headless: config.headless,
+      // Hatchet-воркер работает без графической сессии — принудительно
+      // запускаем браузер в headless. Для сценария с видимым окном
+      // используется CLI (`packages/scraper/src/cli.ts`), который
+      // управляется флагами `--headless` / `--no-headless` и env
+      // `HH_SCRAPER_HEADLESS`.
+      headless: true,
     });
 
     // Запускаем скрапинг
@@ -141,7 +146,10 @@ const scrapeAndSave = scrapeHhWorkflow.task({
         workFormat,
         maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
       },
-      config,
+      // Воркер также форсирует headless для фазы поиска — на сервере
+      // нет дисплея, а .env может содержать `HH_SCRAPER_HEADLESS=false`
+      // для удобства локального CLI‑запуска.
+      { ...config, headless: true },
       cookies,
     );
 
