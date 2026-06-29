@@ -5,7 +5,6 @@ import type {
 } from "@job-radar/scraper";
 import {
   buildSearchUrl,
-  getNextPageUrl,
   getScraperConfig,
   parseSearchPage,
   parseVacancyPage,
@@ -34,7 +33,7 @@ function scrollDelay(): Promise<void> {
  * Использует ТЕ ЖЕ функции парсинга что и Hatchet workflow:
  * - parseSearchPage, parseVacancyPage, buildSearchUrl, getNextPageUrl
  *
- * По умолчанию парсит 1 страницу (20 вакансий) в видимом браузере.
+ * По умолчанию парсит ТОЛЬКО ПЕРВУЮ вакансию для быстрого демо.
  * Включает защиту от блокировок: рандомные задержки, имитация скролла,
  * сброс webdriver detection и прочее.
  *
@@ -76,15 +75,13 @@ interface ScrapeResult {
   errors: string[];
 }
 
-async function scrapeVacancies(
+async function scrapeFirstVacancy(
   options: HhSearchOptions,
   headless: boolean,
   cookies: Cookie[],
 ): Promise<ScrapeResult> {
-  const maxPages = options.maxPages ?? 1;
   const vacancies: ScrapedVacancyDetails[] = [];
   const errors: string[] = [];
-  let pagesScraped = 0;
 
   const browser: Browser = await chromium.launch({
     headless,
@@ -107,7 +104,6 @@ async function scrapeVacancies(
       locale: "ru-RU",
       viewport: { width: 1366, height: 900 },
       userAgent: DESKTOP_UA,
-      // Отключаем webdriver detection
       ignoreHTTPSErrors: true,
     });
 
@@ -121,197 +117,85 @@ async function scrapeVacancies(
     }
 
     const page: Page = await context.newPage();
-    const summaries = new Map<
-      string,
-      Awaited<ReturnType<typeof parseSearchPage>>[0]
-    >();
 
-    // Сбрасываем积累tracking при старте
     await page.addInitScript(() => {
       Object.defineProperty(navigator, "webdriver", { get: () => false });
     });
 
-    // Обход страниц поисковой выдачи
-    for (let pageNum = 0; pageNum < maxPages; pageNum++) {
-      const searchUrl = buildSearchUrl(options, pageNum);
-      logger.info(`Загрузка страницы ${pageNum + 1}/${maxPages}`, {
-        url: searchUrl,
+    // Загружаем страницу поиска
+    const searchUrl = buildSearchUrl(options, 0);
+    logger.info("Загрузка страницы поиска", { url: searchUrl });
+
+    await humanDelay();
+    await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+
+    await page.evaluate(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+    await scrollDelay();
+    await page.mouse.wheel(0, 300);
+    await scrollDelay();
+    await page.mouse.wheel(0, 500);
+    await scrollDelay();
+
+    await page.waitForSelector(
+      '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout, a[data-qa="serp-item__title"]',
+      { timeout: 15_000 },
+    );
+
+    const found = await parseSearchPage(page);
+    logger.info(`Найдено вакансий на странице: ${found.length}`);
+
+    const first = found[0];
+    if (first === undefined) {
+      errors.push("На странице не найдено ни одной вакансии");
+      return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
+    }
+    logger.info(`Парсинг первой вакансии: ${first.hhId} — ${first.title}`);
+
+    await humanDelay(800, 2000);
+    await page.goto(first.url, { waitUntil: "domcontentloaded", timeout: 60_000 });
+
+    await page.evaluate(() => {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    });
+    await scrollDelay();
+    await page.mouse.wheel(0, 400);
+    await scrollDelay();
+    await page.mouse.wheel(0, 600);
+    await scrollDelay();
+
+    try {
+      await page.waitForSelector('[data-qa="vacancy-title"]', { timeout: 10_000 });
+      // Описание и формат работы подгружаются реактивно
+      await Promise.all([
+        page.waitForSelector('[data-qa="vacancy-description"]', { timeout: 15_000 }),
+        page.waitForSelector('p[data-qa="work-formats-text"]', { timeout: 15_000 }),
+      ]);
+    } catch {
+      errors.push(`Не удалось загрузить страницу вакансии ${first.hhId}`);
+      vacancies.push({
+        ...first,
+        description: null,
+        hiringFormats: [],
+        skills: [],
+        experience: null,
+        employment: null,
+        schedule: null,
+        employerLogoUrl: null,
       });
-
-      // Задержка перед каждым запросом — имитация пользователя
-      await humanDelay();
-
-      await page.goto(searchUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
-
-      // Имитация скролла страницы (сбрасывает "прочитанное")
-      await page.evaluate(() => {
-        window.scrollTo({ top: 0, behavior: "instant" });
-      });
-      await scrollDelay();
-      await page.mouse.wheel(0, 300);
-      await scrollDelay();
-      await page.mouse.wheel(0, 500);
-      await scrollDelay();
-
-      // Ждём появления карточек вакансий
-      try {
-        await page.waitForSelector(
-          '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout, a[data-qa="serp-item__title"]',
-          { timeout: 15_000 },
-        );
-      } catch {
-        const content = await page.content();
-        const hasContent = content.length > 5000;
-        if (!hasContent) {
-          errors.push(
-            `Страница ${pageNum + 1} не загрузилась (пустой контент)`,
-          );
-          continue;
-        }
-        // Если контент есть, но селекторы не нашлись — пробуем продолжить
-        logger.warn(
-          `Селекторы не найдены на странице ${pageNum + 1}, продолжаем...`,
-        );
-      }
-
-      pagesScraped++;
-      const found = await parseSearchPage(page);
-      logger.info(`Найдено вакансий на странице: ${found.length}`);
-
-      for (const s of found) {
-        if (s.hhId) summaries.set(s.hhId, s);
-      }
-
-      // Если это последняя страница — выходим из цикла
-      if (pageNum + 1 >= maxPages) break;
-
-      // Проверяем наличие следующей страницы
-      const nextUrl = await getNextPageUrl(page);
-      if (!nextUrl) {
-        logger.info("Достигнута последняя страница");
-        break;
-      }
+      return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
     }
 
-    // Парсинг каждой вакансии
-    let processed = 0;
-    for (const [hhId, summary] of summaries) {
-      processed++;
-      const vacancyUrl = summary.url;
-      logger.info(`Парсинг вакансии ${processed}/${summaries.size}: ${hhId}`);
-
-      // Задержка перед открытием вакансии — имитация чтения списка
-      await humanDelay(800, 2000);
-
-      try {
-        await page.goto(vacancyUrl, {
-          waitUntil: "domcontentloaded",
-          timeout: 60_000,
-        });
-
-        // Имитация чтения страницы вакансии
-        await page.evaluate(() => {
-          window.scrollTo({ top: 0, behavior: "instant" });
-        });
-        await scrollDelay();
-        await page.mouse.wheel(0, 400);
-        await scrollDelay();
-        await page.mouse.wheel(0, 600);
-        await scrollDelay();
-
-        try {
-          await page.waitForSelector('[data-qa="vacancy-title"]', {
-            timeout: 10_000,
-          });
-        } catch {
-          errors.push(`Не удалось загрузить страницу вакансии ${hhId}`);
-          // Добавляем хотя бы краткие данные
-          vacancies.push({
-            ...summary,
-            description: null,
-            hiringFormats: [],
-            skills: [],
-            experience: null,
-            employment: null,
-            schedule: null,
-            employerLogoUrl: null,
-          });
-          continue;
-        }
-
-        const details = await parseVacancyPage(page, summary);
-        vacancies.push(details);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : JSON.stringify(err);
-        errors.push(`Ошибка парсинга вакансии ${hhId}: ${msg}`);
-        logger.error(`Ошибка парсинга ${hhId}`, undefined, { error: msg });
-        // Добавляем хотя бы краткие данные
-        vacancies.push({
-          ...summary,
-          description: null,
-          hiringFormats: [],
-          skills: [],
-          experience: null,
-          employment: null,
-          schedule: null,
-          employerLogoUrl: null,
-        });
-      }
-    }
+    const details = await parseVacancyPage(page, first);
+    vacancies.push(details);
 
     await context.close();
   } finally {
     await browser.close();
   }
 
-  return { keyword: options.keyword, vacancies, pagesScraped, errors };
-}
-
-function printResults(result: ScrapeResult): void {
-  console.log("\n" + "=".repeat(60));
-  console.log("РЕЗУЛЬТАТЫ СКРАПИНГА");
-  console.log("=".repeat(60));
-  console.log(`Ключевое слово: ${result.keyword}`);
-  console.log(`Страниц обработано: ${result.pagesScraped}`);
-  console.log(`Вакансий собрано: ${result.vacancies.length}`);
-  if (result.errors.length > 0) {
-    console.log(`\nОшибки (${result.errors.length}):`);
-    for (const err of result.errors) {
-      console.log(`  - ${err}`);
-    }
-  }
-  console.log("\n" + "-".repeat(60));
-
-  // Печатаем первые 20 вакансий
-  const toShow = result.vacancies.slice(0, 20);
-  for (const [i, v] of toShow.entries()) {
-    console.log(`\n${i + 1}. ${v.title}`);
-    console.log(`   hhId: ${v.hhId}`);
-    console.log(`   Компания: ${v.employerName ?? "—"}`);
-    if (v.salary) {
-      const { from, to, currency, gross } = v.salary;
-      const parts: string[] = [];
-      if (from) parts.push(`от ${from.toLocaleString("ru-RU")}`);
-      if (to) parts.push(`до ${to.toLocaleString("ru-RU")}`);
-      const grossText = gross ? " (до вычета налогов)" : "";
-      console.log(`   Зарплата: ${parts.join(" – ")} ${currency}${grossText}`);
-    } else {
-      console.log(`   Зарплата: не указана`);
-    }
-    console.log(`   Город: ${v.area ?? "—"}`);
-    console.log(`   Опыт: ${v.experience ?? "—"}`);
-    console.log(`   Формат: ${v.schedule ?? "—"}`);
-    if (v.skills.length > 0) {
-      console.log(
-        `   Навыки: ${v.skills.slice(0, 5).join(", ")}${v.skills.length > 5 ? "..." : ""}`,
-      );
-    }
-    console.log(`   Ссылка: ${v.url}`);
-  }
-
-  if (result.vacancies.length > 20) {
-    console.log(`\n... и ещё ${result.vacancies.length - 20} вакансий`);
-  }
+  return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
 }
 
 async function main() {
@@ -325,6 +209,12 @@ async function main() {
     area: cli.area,
     maxPages: cli.maxPages,
   });
+
+  const searchOptions: HhSearchOptions = {
+    keyword: cli.keyword,
+    area: cli.area,
+    maxPages: cli.maxPages,
+  };
 
   if (!cli.headless) {
     console.log("\n🌐 Браузер будет ВИДЕН (headless выключен)");
@@ -347,17 +237,34 @@ async function main() {
     return [] as Cookie[];
   });
 
-  // 2) Запускаем скрапинг с теми же параметрами что и в Hatchet workflow
-  const searchOptions: HhSearchOptions = {
-    keyword: cli.keyword,
-    area: cli.area,
-    maxPages: cli.maxPages,
-  };
+  // 2) Парсим ТОЛЬКО первую вакансию для демо
+  const result = await scrapeFirstVacancy(searchOptions, cli.headless, cookies);
 
-  const result = await scrapeVacancies(searchOptions, cli.headless, cookies);
-
-  // 3) Печатаем результаты
-  printResults(result);
+  // 3) Выводим JSON со всеми полями ScrapedVacancyDetails
+  if (result.vacancies.length > 0) {
+    const v = result.vacancies[0];
+    if (v !== undefined) {
+      const output = {
+        hhId: v.hhId,
+        title: v.title,
+        url: v.url,
+        employerName: v.employerName,
+        employerLogoUrl: v.employerLogoUrl,
+        salary: v.salary,
+        area: v.area,
+        publishedAt: v.publishedAt,
+        experience: v.experience,
+        employment: v.employment,
+        schedule: v.schedule,
+        hiringFormats: v.hiringFormats,
+        skills: v.skills,
+        description: v.description,
+      };
+      console.log("\n" + JSON.stringify(output, null, 2));
+    }
+  } else if (result.errors.length > 0) {
+    console.error("\nОшибки:", JSON.stringify(result.errors, null, 2));
+  }
 
   // 4) Сохраняем в файл если указан
   if (cli.outputFile) {
@@ -368,10 +275,10 @@ async function main() {
       "utf-8",
     );
     logger.info(`Результат сохранён в ${cli.outputFile}`);
-    console.log(`\n💾 Результат сохранён в: ${cli.outputFile}`);
+    console.log(`\nРезультат сохранён в: ${cli.outputFile}`);
   }
 
-  console.log("\n✅ Скрапинг завершён!\n");
+  console.log("\nГотово!\n");
 }
 
 main().catch((err) => {
