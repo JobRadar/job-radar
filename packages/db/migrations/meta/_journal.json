@@ -15,6 +15,13 @@
       "when": 1782457226712,
       "tag": "0001_skinny_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782715128877,
+      "tag": "0002_mushy_beyonder",
+      "breakpoints": true
     }
   ]
 }

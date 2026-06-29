@@ -1,0 +1,1 @@
+ALTER TABLE "search_keywords" ADD COLUMN "work_format" varchar(64);
