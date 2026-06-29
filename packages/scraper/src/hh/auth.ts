@@ -1,4 +1,9 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname } from "node:path";
 import { logger } from "@job-radar/config";
 import type { Browser, BrowserContext, Cookie } from "playwright";
@@ -103,6 +108,7 @@ export async function loginToHh(
   headless = false,
 ): Promise<Cookie[]> {
   let browser: Browser | null = null;
+  let context: BrowserContext | null = null;
 
   logger.info("Начинаем авторизацию на hh.ru", {
     headless,
@@ -113,46 +119,44 @@ export async function loginToHh(
   try {
     logger.debug("Запускаем браузер Chromium", {
       headless,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--start-maximized"],
-      ignoreDefaultArgs: ["--no-startup-window"],
+      mode: "launch + newContext",
+      channel: "playwright-bundled-chromium",
     });
+
+    // Use bundled Playwright Chromium for both headless and headed on Windows.
+    // We do NOT use system "channel: chrome/msedge" via launchPersistentContext
+    // because branded Chrome runs extra services (GCM, edge-updater) that
+    // block Playwright's `--remote-debugging-pipe` handshake and cause the
+    // launch promise to never resolve — the browser window opens but
+    // `page.goto(...)` never starts.
+    // The bare `chromium.launch()` + `browser.newContext()` path uses Playwright's
+    // bundled Chromium, which has no such services attached.
     browser = await chromium.launch({
       headless,
-      timeout: 300000, // 5 minutes launch timeout
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--start-maximized"],
-      ignoreDefaultArgs: ["--no-startup-window"],
+      timeout: 300000,
+      args: headless ? ["--no-sandbox", "--disable-setuid-sandbox"] : [],
       handleSIGHUP: false,
       handleSIGINT: false,
       handleSIGTERM: false,
     });
-
-    // Логируем stderr браузера
-    browser.on("disconnected", () => logger.debug("Браузер отключился"));
-    // @ts-expect-error - process() method exists in Playwright
-    const process = browser.process() as any;
-    if (process) {
-      logger.debug("Процесс браузера запущен", { pid: process.pid });
-      process.stderr?.on("data", (data: Buffer) => {
-        logger.debug("Chromium stderr", { data: data.toString() });
-      });
-      process.stdout?.on("data", (data: Buffer) => {
-        logger.debug("Chromium stdout", { data: data.toString() });
-      });
-    }
     logger.info("Браузер Chromium успешно запущен", {
       browserVersion: browser.version(),
+      headless,
     });
 
     logger.debug("Создаем контекст браузера", { locale: "ru-RU" });
-    const context: BrowserContext = await browser.newContext({
+    context = await browser.newContext({
       locale: "ru-RU",
+      viewport: null,
       userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
     });
     logger.debug("Контекст браузера создан");
 
+    browser?.on("disconnected", () => logger.debug("Браузер отключился"));
+
     logger.debug("Создаем новую страницу");
-    const page = await context.newPage();
+    const page = context.pages()[0] ?? (await context.newPage());
 
     // Логируем все события страницы
     page.on("request", (request) => {
@@ -239,6 +243,7 @@ export async function loginToHh(
     throw error;
   } finally {
     logger.debug("Закрываем браузер");
+    await context?.close();
     await browser?.close();
     logger.info("Браузер закрыт");
   }
