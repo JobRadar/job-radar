@@ -29,6 +29,7 @@ export const Vacancy = pgTable("vacancies", (t) => ({
   categoryId: t.uuid().references(() => Category.id, { onDelete: "set null" }),
   title: t.varchar({ length: 512 }).notNull(),
   employerName: t.varchar({ length: 256 }),
+  employerUrl: t.varchar({ length: 1024 }),
   employerLogoUrl: t.varchar({ length: 1024 }),
   /** Зарплата: { from, to, currency, gross } */
   salary: t.jsonb().$type<HhSalary>(),

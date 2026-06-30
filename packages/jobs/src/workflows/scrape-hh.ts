@@ -149,6 +149,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
           .set({
             title: v.title,
             employerName: v.employerName ?? undefined,
+            employerUrl: v.employerUrl ?? undefined,
             employerLogoUrl: v.employerLogoUrl ?? undefined,
             salary: v.salary ?? undefined,
             area: v.area ?? undefined,
@@ -169,6 +170,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
           categoryId: categoryId ?? undefined,
           title: v.title,
           employerName: v.employerName ?? undefined,
+          employerUrl: v.employerUrl ?? undefined,
           employerLogoUrl: v.employerLogoUrl ?? undefined,
           salary: v.salary ?? undefined,
           area: v.area ?? undefined,

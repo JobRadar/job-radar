@@ -198,6 +198,7 @@ async function scrapeFirstVacancy(
         employment: null,
         schedule: null,
         employerLogoUrl: null,
+        employerUrl: null,
       });
       return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
     }

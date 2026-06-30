@@ -1,0 +1,1 @@
+ALTER TABLE "vacancies" ADD COLUMN "employer_url" varchar(1024);

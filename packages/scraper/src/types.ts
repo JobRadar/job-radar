@@ -59,6 +59,7 @@ export interface ScrapedVacancyDetails extends ScrapedVacancySummary {
   /** Форматы работы: офис / удалённо / гибрид и т.д. */
   hiringFormats: string[];
   employerLogoUrl: string | null;
+  employerUrl: string | null;
 }
 
 /** Опции авторизации на hh.ru */

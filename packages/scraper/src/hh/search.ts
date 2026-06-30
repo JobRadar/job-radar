@@ -180,6 +180,7 @@ export async function searchVacancies(
             employment: null,
             schedule: null,
             employerLogoUrl: null,
+            employerUrl: null,
           };
           vacancies.push(fallback);
           if (onVacancy) await onVacancy(fallback);

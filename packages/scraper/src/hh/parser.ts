@@ -352,6 +352,7 @@ export async function parseVacancyPage(
       employment: string | null;
       scheduleRaw: string | null;
       employerLogoUrl: string | null;
+      employerUrl: string | null;
     };
 
     const evalResult: EvalResult = await page.evaluate(() => {
@@ -385,6 +386,10 @@ export async function parseVacancyPage(
         '[data-qa="vacancy-company-logo"] img',
       ) as HTMLImageElement | null;
 
+      const companyLinkEl = document.querySelector(
+        'a[data-qa="vacancy-company-name"]',
+      ) as HTMLAnchorElement | null;
+
       const workFormatsEl = document.querySelector(
         '[data-qa="work-formats-text"], [data-qa="vacancy-view-work-format"]',
       );
@@ -410,6 +415,7 @@ export async function parseVacancyPage(
             ?.textContent?.trim() ?? null,
         scheduleRaw,
         employerLogoUrl: logoEl?.src ?? null,
+        employerUrl: companyLinkEl?.href ?? null,
       };
     });
 
@@ -432,6 +438,7 @@ export async function parseVacancyPage(
       employment: evalResult.employment,
       schedule: scheduleClean,
       employerLogoUrl: evalResult.employerLogoUrl,
+      employerUrl: evalResult.employerUrl,
     };
   } catch (err) {
     logger.error("parseVacancyPage: evaluate выбросил ошибку", err);
@@ -448,6 +455,7 @@ export async function parseVacancyPage(
       employment: null,
       schedule: null,
       employerLogoUrl: null,
+      employerUrl: null,
     };
   }
 
