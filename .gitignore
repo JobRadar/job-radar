@@ -55,4 +55,4 @@ dist/
 # tanstack
 .tanstack
 .claude
-packages/scrapper/storage/**
+packages/scraper/storage/**
