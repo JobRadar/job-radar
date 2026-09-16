@@ -23,7 +23,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hatchet-dev/typescript-sdk": "1.24.3",
+    "@hatchet-dev/typescript-sdk": "1.33.1",
     "@job-radar/ai": "workspace:*",
     "@job-radar/db": "workspace:*",
     "@job-radar/scraper": "workspace:*"
