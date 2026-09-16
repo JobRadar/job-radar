@@ -24,6 +24,6 @@
     "@job-radar/tsconfig": "workspace:*",
     "@types/node": "26.0.1",
     "tsdown": "latest",
-    "typescript": "6.0.3"
+    "typescript": "7.0.2"
   }
 }
