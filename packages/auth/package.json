@@ -24,7 +24,7 @@
   "devDependencies": {
     "@better-auth/cli": "1.4.21",
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.0.1",
+    "@types/node": "26.6.1",
     "typescript": "7.0.2"
   }
 }
