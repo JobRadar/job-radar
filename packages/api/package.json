@@ -27,9 +27,9 @@
     "@job-radar/validators": "workspace:*",
     "@orpc/contract": "^1.15.1",
     "@orpc/server": "^1.15.1",
-    "better-auth": "1.6.22",
+    "better-auth": "1.7.5",
     "superjson": "2.2.6",
-    "zod": "4.4.3"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",

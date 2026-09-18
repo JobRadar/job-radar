@@ -22,7 +22,7 @@
     "@job-radar/config": "workspace:*",
     "@openrouter/ai-sdk-provider": "3.0.0",
     "ai": "7.0.102",
-    "zod": "4.4.3"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",

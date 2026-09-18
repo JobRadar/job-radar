@@ -33,7 +33,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/otel": "^2.1.3",
-    "better-auth": "1.6.22",
+    "better-auth": "1.7.5",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.21.0",
     "next": "16.3.5",
@@ -41,7 +41,7 @@
     "react-dom": "19.2.7",
     "recharts": "^3.9.0",
     "superjson": "2.2.6",
-    "zod": "4.4.3"
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@job-radar/tailwind-config": "workspace:*",
