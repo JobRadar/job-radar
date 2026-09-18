@@ -13,10 +13,17 @@ export const update = protectedProcedure
   .handler(async ({ context, input }) => {
     const { db, session } = context;
 
+    if (!input.keyword && !input.professionalRoles?.length) {
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Укажите ключевое слово или выберите IT-роли",
+      });
+    }
+
     const [updated] = await db
       .update(SearchKeyword)
       .set({
-        keyword: input.keyword,
+        keyword: input.keyword ?? null,
+        professionalRoles: input.professionalRoles ?? null,
         categoryId: input.categoryId ?? null,
         area: input.area,
         salaryFrom: input.salaryFrom,

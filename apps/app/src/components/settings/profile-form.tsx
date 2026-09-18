@@ -1,7 +1,10 @@
 "use client";
 
 import { Button, Input, Label, Textarea, toast } from "@job-radar/ui";
-import { type ProfileFormValues, profileFormSchema } from "@job-radar/validators";
+import {
+  type ProfileFormValues,
+  profileFormSchema,
+} from "@job-radar/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { User } from "lucide-react";

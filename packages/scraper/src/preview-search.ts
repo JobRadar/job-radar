@@ -1,8 +1,8 @@
 import { logger } from "@job-radar/config";
 import type { Cookie } from "playwright";
 import { chromium } from "playwright";
-import { resolveCookies } from "./hh/auth.js";
 import { getScraperConfig } from "./config.js";
+import { resolveCookies } from "./hh/auth.js";
 
 /**
  * CLI-скрипт «предпросмотр скрапинга в браузере».
@@ -154,8 +154,13 @@ async function main() {
       console.log(
         `\nДальше — обход ${cli.maxPages} страниц (можно остановить Ctrl+C в этом терминале).`,
       );
-      const all: Array<{ page: number; index: number; hhId: string | null; href: string; title: string }> =
-        [];
+      const all: Array<{
+        page: number;
+        index: number;
+        hhId: string | null;
+        href: string;
+        title: string;
+      }> = [];
 
       // Уже собрали первую страницу, добавим в общий список.
       for (const [i, c] of cards.entries()) {
@@ -165,7 +170,10 @@ async function main() {
 
       for (let p = 1; p < cli.maxPages; p += 1) {
         const pageUrl = `${HH_BASE}/search/vacancy?${params.toString()}&page=${p}`;
-        await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: 60_000 });
+        await page.goto(pageUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 60_000,
+        });
         const more = await page.$$eval(
           '[data-qa="vacancy-serp__vacancy"]',
           (nodes) =>
@@ -178,7 +186,13 @@ async function main() {
             }),
         );
         for (const [i, c] of more.entries()) {
-          all.push({ page: p, index: i, hhId: matchHhId(c.href), href: c.href, title: c.title });
+          all.push({
+            page: p,
+            index: i,
+            hhId: matchHhId(c.href),
+            href: c.href,
+            title: c.title,
+          });
         }
         logger.info(`стр. ${p + 1}: ${more.length}`);
       }
@@ -186,11 +200,15 @@ async function main() {
       console.log(`\n--- Итого собрано: ${all.length} ссылок ---`);
       console.log("Первые 5:");
       for (const r of all.slice(0, 5)) {
-        console.log(`  p${r.page + 1}#${r.index + 1} hhId=${r.hhId ?? "—"} ${r.title.slice(0, 80)}`);
+        console.log(
+          `  p${r.page + 1}#${r.index + 1} hhId=${r.hhId ?? "—"} ${r.title.slice(0, 80)}`,
+        );
       }
     }
 
-    console.log("\nГотово. Браузер остаётся открытым, нажмите ENTER чтобы закрыть.");
+    console.log(
+      "\nГотово. Браузер остаётся открытым, нажмите ENTER чтобы закрыть.",
+    );
     await waitForEnter();
   } finally {
     await browser.close();

@@ -5,6 +5,7 @@ export * from "./data-table";
 export * from "./keyword";
 export * from "./login";
 export * from "./otp";
+export * from "./professional-roles";
 export * from "./profile";
 export * from "./resume";
 export * from "./resume-generation";

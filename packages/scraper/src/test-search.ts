@@ -152,7 +152,12 @@ async function scrapeFirstVacancy(
     const first = found[0];
     if (first === undefined) {
       errors.push("На странице не найдено ни одной вакансии");
-      return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
+      return {
+        keyword: options.keyword ?? "",
+        vacancies,
+        pagesScraped: 1,
+        errors,
+      };
     }
     logger.info(`Парсинг первой вакансии: ${first.hhId} — ${first.title}`);
 
@@ -178,7 +183,9 @@ async function scrapeFirstVacancy(
       await Promise.all([
         page.waitForFunction(
           () => {
-            const el = document.querySelector('[data-qa="vacancy-description"]');
+            const el = document.querySelector(
+              '[data-qa="vacancy-description"]',
+            );
             return el && (el.textContent?.trim()?.length ?? 0) > 10;
           },
           { timeout: 15_000 },
@@ -200,7 +207,12 @@ async function scrapeFirstVacancy(
         employerLogoUrl: null,
         employerUrl: null,
       });
-      return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
+      return {
+        keyword: options.keyword ?? "",
+        vacancies,
+        pagesScraped: 1,
+        errors,
+      };
     }
 
     const details = await parseVacancyPage(page, first);
@@ -211,7 +223,7 @@ async function scrapeFirstVacancy(
     await browser.close();
   }
 
-  return { keyword: options.keyword, vacancies, pagesScraped: 1, errors };
+  return { keyword: options.keyword ?? "", vacancies, pagesScraped: 1, errors };
 }
 
 async function main() {

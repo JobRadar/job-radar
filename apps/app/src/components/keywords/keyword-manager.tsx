@@ -20,6 +20,7 @@ import {
   TableRow,
   toast,
 } from "@job-radar/ui";
+import { IT_PROFESSIONAL_ROLES } from "@job-radar/validators";
 import { IconPlus, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -45,6 +46,16 @@ const WORK_FORMAT_LABELS: Record<string, string> = {
 
 const ALL_WORK_FORMATS = ["REMOTE", "OFFICE", "HYBRID", "FIELD_WORK"] as const;
 
+/** Человекочитаемая метка строки: keyword или число выбранных IT-ролей. */
+function rowLabel(row: Pick<KeywordItem, "keyword" | "professionalRoles">) {
+  return (
+    row.keyword ??
+    (row.professionalRoles?.length
+      ? `IT-роли (${row.professionalRoles.length})`
+      : "—")
+  );
+}
+
 /** Разбираем CSV из БД в массив. */
 function parseWorkFormat(raw: string | null): string[] {
   if (!raw) return [];
@@ -56,7 +67,8 @@ function parseWorkFormat(raw: string | null): string[] {
 
 export interface KeywordItem {
   id: string;
-  keyword: string;
+  keyword: string | null;
+  professionalRoles: string[] | null;
   categoryId: string | null;
   categoryLabel: string | null;
   area: number;
@@ -79,12 +91,14 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
   const queryClient = useQueryClient();
 
   const [keyword, setKeyword] = useState("");
+  const [professionalRoles, setProfessionalRoles] = useState<string[]>([]);
   const [categoryId, setCategoryId] = useState<string>(NO_CATEGORY);
   const [area, setArea] = useState("113");
   const [experience, setExperience] = useState<string>("any");
   // Создание по умолчанию ищет удалёнку — самый частый сценарий
-  const [workFormat, setWorkFormat] =
-    useState<typeof ALL_WORK_FORMATS[number][]>(["REMOTE"]);
+  const [workFormat, setWorkFormat] = useState<
+    (typeof ALL_WORK_FORMATS)[number][]
+  >(["REMOTE"]);
 
   async function invalidate() {
     await queryClient.invalidateQueries({ queryKey: orpc.keyword.key() });
@@ -96,6 +110,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     onSuccess: async () => {
       toast.success("Ключевое слово добавлено");
       setKeyword("");
+      setProfessionalRoles([]);
       setCategoryId(NO_CATEGORY);
       setArea("113");
       setExperience("any");
@@ -125,20 +140,28 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     onError: (err: Error) => toast.error(err.message || "Не удалось удалить"),
   });
 
-  function toggleWorkFormatCreate(value: typeof ALL_WORK_FORMATS[number]) {
+  function toggleWorkFormatCreate(value: (typeof ALL_WORK_FORMATS)[number]) {
     setWorkFormat((curr) =>
       curr.includes(value) ? curr.filter((v) => v !== value) : [...curr, value],
     );
   }
 
+  function toggleProfessionalRole(id: string) {
+    setProfessionalRoles((curr) =>
+      curr.includes(id) ? curr.filter((v) => v !== id) : [...curr, id],
+    );
+  }
+
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!keyword.trim()) {
-      toast.error("Укажите ключевое слово");
+    if (!keyword.trim() && professionalRoles.length === 0) {
+      toast.error("Укажите ключевое слово или выберите IT-роли");
       return;
     }
     createMutation.mutate({
-      keyword: keyword.trim(),
+      keyword: keyword.trim() || undefined,
+      professionalRoles:
+        professionalRoles.length > 0 ? professionalRoles : undefined,
       categoryId: categoryId === NO_CATEGORY ? null : categoryId,
       area: Number(area) || 113,
       experience:
@@ -153,7 +176,8 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
   function buildUpdatePayload(row: KeywordItem) {
     return {
       id: row.id,
-      keyword: row.keyword,
+      keyword: row.keyword ?? undefined,
+      professionalRoles: row.professionalRoles ?? undefined,
       categoryId: row.categoryId,
       area: row.area,
       salaryFrom: row.salaryFrom ?? undefined,
@@ -191,7 +215,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
 
   function handleDelete(row: KeywordItem) {
     const confirmed = window.confirm(
-      `Удалить «${row.keyword}»? Вместе с ним удалятся связанные вакансии. Действие необратимо.`,
+      `Удалить «${rowLabel(row)}»? Вместе с ним удалятся связанные вакансии. Действие необратимо.`,
     );
     if (confirmed) deleteMutation.mutate({ id: row.id });
   }
@@ -214,7 +238,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
             id="keyword"
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Например, AI Engineer…"
+            placeholder="Необязательно, если выбраны IT-роли ниже"
             autoComplete="off"
           />
         </div>
@@ -290,6 +314,50 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
             Пусто — без фильтра. Несколько значений объединяются через «или».
           </p>
         </div>
+        <div className="space-y-2 sm:col-span-2 lg:col-span-5">
+          <div className="flex items-center justify-between">
+            <Label>IT-роли hh.ru (вместо/вместе с ключевым словом)</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="text-primary text-xs underline-offset-2 hover:underline"
+                onClick={() =>
+                  setProfessionalRoles(IT_PROFESSIONAL_ROLES.map((r) => r.id))
+                }
+              >
+                Выбрать все ({IT_PROFESSIONAL_ROLES.length})
+              </button>
+              <button
+                type="button"
+                className="text-muted-foreground text-xs underline-offset-2 hover:underline"
+                onClick={() => setProfessionalRoles([])}
+              >
+                Снять всё
+              </button>
+            </div>
+          </div>
+          <div className="flex max-h-40 flex-wrap gap-2 overflow-y-auto rounded-md border p-2">
+            {IT_PROFESSIONAL_ROLES.map((role) => {
+              const checked = professionalRoles.includes(role.id);
+              return (
+                <label
+                  key={role.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1 text-xs"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={() => toggleProfessionalRole(role.id)}
+                  />
+                  <span>{role.name}</span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Например: «Выбрать все» — покроет все вакансии IT-сферы hh.ru без
+            текстового запроса.
+          </p>
+        </div>
       </form>
 
       {/* Список */}
@@ -323,7 +391,9 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                 const formats = parseWorkFormat(row.workFormat);
                 return (
                   <TableRow key={row.id}>
-                    <TableCell className="font-medium">{row.keyword}</TableCell>
+                    <TableCell className="font-medium">
+                      {rowLabel(row)}
+                    </TableCell>
                     <TableCell>
                       <Select
                         value={row.categoryId ?? NO_CATEGORY}
@@ -348,7 +418,8 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                     <TableCell className="hidden md:table-cell">
                       <span className="text-muted-foreground text-sm">
                         {row.experience
-                          ? (EXPERIENCE_LABELS[row.experience] ?? row.experience)
+                          ? (EXPERIENCE_LABELS[row.experience] ??
+                            row.experience)
                           : "—"}
                       </span>
                     </TableCell>
@@ -363,7 +434,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                               onClick={() => toggleWorkFormat(row, fmt)}
                               disabled={isMutating}
                               className="focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none disabled:opacity-50"
-                              aria-label={`${WORK_FORMAT_LABELS[fmt]} для ${row.keyword}`}
+                              aria-label={`${WORK_FORMAT_LABELS[fmt]} для ${rowLabel(row)}`}
                             >
                               <Badge
                                 variant={active ? "default" : "outline"}
@@ -382,7 +453,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                           checked={row.isActive}
                           onCheckedChange={(c) => toggleActive(row, c === true)}
                           disabled={isMutating}
-                          aria-label={`Активность ${row.keyword}`}
+                          aria-label={`Активность ${rowLabel(row)}`}
                         />
                         {row.isActive ? (
                           <Badge variant="outline">Вкл</Badge>
@@ -398,7 +469,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
                         className="text-muted-foreground hover:text-destructive size-8"
                         onClick={() => handleDelete(row)}
                         disabled={isMutating}
-                        aria-label={`Удалить ${row.keyword}`}
+                        aria-label={`Удалить ${rowLabel(row)}`}
                       >
                         <IconTrash className="size-4" />
                       </Button>

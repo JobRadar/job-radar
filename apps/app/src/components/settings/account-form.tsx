@@ -15,7 +15,10 @@ import {
   SelectValue,
   toast,
 } from "@job-radar/ui";
-import { type AccountFormValues, accountFormSchema } from "@job-radar/validators";
+import {
+  type AccountFormValues,
+  accountFormSchema,
+} from "@job-radar/validators";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";

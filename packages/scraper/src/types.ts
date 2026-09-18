@@ -13,7 +13,13 @@ export type WorkFormat = "REMOTE" | "OFFICE" | "HYBRID" | "FIELD_WORK";
 
 /** Параметры поискового запроса к hh.ru */
 export interface HhSearchOptions {
-  keyword: string;
+  /** Текстовый запрос. Можно опустить, если задан professionalRoles */
+  keyword?: string;
+  /**
+   * ID специализаций hh.ru (professional_role) — см. IT_PROFESSIONAL_ROLE_IDS.
+   * Позволяет искать по всей IT-сфере без текстового запроса.
+   */
+  professionalRoles?: string[];
   /** Код региона hh.ru. 113 = вся Россия, 1 = Москва, 2 = СПб */
   area?: number;
   salaryFrom?: number;

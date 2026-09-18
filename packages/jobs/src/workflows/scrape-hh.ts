@@ -1,4 +1,4 @@
-import { eq } from "@job-radar/db";
+import { and, eq, lt } from "@job-radar/db";
 import { db } from "@job-radar/db/client";
 import { ScrapeRun, SearchKeyword, Vacancy } from "@job-radar/db/schema";
 import {
@@ -59,6 +59,12 @@ const initRun = scrapeHhWorkflow.task({
       throw new Error(`SearchKeyword ${input.keywordId} неактивен`);
     }
 
+    if (!keyword.keyword && !keyword.professionalRoles?.length) {
+      throw new Error(
+        `SearchKeyword ${input.keywordId} не содержит ни keyword, ни professionalRoles`,
+      );
+    }
+
     // Создаём запись о текущем прогоне
     const [scrapeRun] = await db
       .insert(ScrapeRun)
@@ -78,17 +84,18 @@ const initRun = scrapeHhWorkflow.task({
     const workFormatRaw = keyword.workFormat ?? null;
     const ALLOWED = new Set(["REMOTE", "OFFICE", "HYBRID", "FIELD_WORK"]);
     const workFormat: WorkFormat[] | undefined = workFormatRaw
-      ? (workFormatRaw
+      ? workFormatRaw
           .split(",")
           .map((v) => v.trim())
-          .filter((v): v is WorkFormat => ALLOWED.has(v)))
+          .filter((v): v is WorkFormat => ALLOWED.has(v))
       : undefined;
 
     return {
       scrapeRunId: scrapeRun.id,
       keywordId: keyword.id,
       categoryId: keyword.categoryId ?? undefined,
-      keyword: keyword.keyword,
+      keyword: keyword.keyword ?? undefined,
+      professionalRoles: keyword.professionalRoles ?? undefined,
       area: keyword.area,
       experience: keyword.experience ?? undefined,
       employment: keyword.employment ?? undefined,
@@ -110,6 +117,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
       keywordId,
       categoryId,
       keyword,
+      professionalRoles,
       area,
       experience,
       employment,
@@ -137,7 +145,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
     });
 
     // Upsert одной вакансии в БД
-    const upsertVacancy = async (v: typeof result.vacancies[number]) => {
+    const upsertVacancy = async (v: (typeof result.vacancies)[number]) => {
       if (!v.hhId) return;
       const existing = await db.query.Vacancy.findFirst({
         where: eq(Vacancy.hhId, v.hhId),
@@ -161,6 +169,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
             categoryId: categoryId ?? undefined,
             publishedAt: v.publishedAt ?? undefined,
             isArchived: false,
+            lastSeenAt: new Date(),
           })
           .where(eq(Vacancy.hhId, v.hhId));
       } else {
@@ -181,6 +190,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
           skills: v.skills,
           url: v.url,
           publishedAt: v.publishedAt ?? undefined,
+          lastSeenAt: new Date(),
         });
       }
     };
@@ -189,6 +199,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
     const result = await searchVacancies(
       {
         keyword,
+        professionalRoles,
         area: area ?? 113,
         experience: experience ?? undefined,
         employment: employment ?? undefined,
@@ -223,6 +234,7 @@ const scrapeAndSave = scrapeHhWorkflow.task({
 
     return {
       scrapeRunId,
+      keywordId,
       vacanciesFound: result.vacancies.length,
       vacanciesNew,
       errors: result.errors,
@@ -230,10 +242,43 @@ const scrapeAndSave = scrapeHhWorkflow.task({
   },
 });
 
-// ── Шаг 3: финализация ────────────────────────────────────────────────────
+// ── Шаг 3: авто-архивация протухших вакансий ──────────────────────────────
+// Вакансия, которая не встретилась в свежем скрапинге этого keyword дольше
+// HH_VACANCY_STALE_DAYS дней, считается закрытой на hh.ru и помечается
+// isArchived=true. Порог должен быть заметно больше интервала cron-запуска
+// (по умолчанию каждые 6 часов), чтобы не архивировать вакансии из-за
+// единичного сбойного прогона.
+const archiveStaleVacancies = scrapeHhWorkflow.task({
+  name: "archive-stale-vacancies",
+  parents: [scrapeAndSave],
+  retries: 1,
+  executionTimeout: "1m",
+  fn: async (_rawInput, ctx) => {
+    const { keywordId } = await ctx.parentOutput(scrapeAndSave);
+
+    const staleDays = Number(process.env.HH_VACANCY_STALE_DAYS ?? "3");
+    const staleBefore = new Date(Date.now() - staleDays * 24 * 60 * 60 * 1000);
+
+    const archived = await db
+      .update(Vacancy)
+      .set({ isArchived: true })
+      .where(
+        and(
+          eq(Vacancy.keywordId, keywordId),
+          eq(Vacancy.isArchived, false),
+          lt(Vacancy.lastSeenAt, staleBefore),
+        ),
+      )
+      .returning({ id: Vacancy.id });
+
+    return { archivedCount: archived.length };
+  },
+});
+
+// ── Шаг 4: финализация ────────────────────────────────────────────────────
 scrapeHhWorkflow.task({
   name: "finalize",
-  parents: [scrapeAndSave],
+  parents: [scrapeAndSave, archiveStaleVacancies],
   retries: 1,
   executionTimeout: "15s",
   fn: async (_rawInput, ctx) => {

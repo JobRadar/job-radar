@@ -20,6 +20,7 @@ export default async function KeywordsPage() {
   const keywords: KeywordItem[] = items.map((k) => ({
     id: k.id,
     keyword: k.keyword,
+    professionalRoles: k.professionalRoles,
     categoryId: k.categoryId,
     categoryLabel: k.categoryLabel,
     area: k.area,

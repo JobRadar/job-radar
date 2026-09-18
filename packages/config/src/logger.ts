@@ -50,7 +50,9 @@ function write(level: LogLevel, message: string, meta?: LogMeta): void {
 
 function setupGlobalErrorHandlers() {
   process.on("uncaughtException", (error) => {
-    logger.error("Необработанное исключение", error, { type: "uncaughtException" });
+    logger.error("Необработанное исключение", error, {
+      type: "uncaughtException",
+    });
     process.exit(1);
   });
 

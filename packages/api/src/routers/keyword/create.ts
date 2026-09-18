@@ -12,11 +12,18 @@ export const create = protectedProcedure
   .handler(async ({ context, input }) => {
     const { db, session } = context;
 
+    if (!input.keyword && !input.professionalRoles?.length) {
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Укажите ключевое слово или выберите IT-роли",
+      });
+    }
+
     const [row] = await db
       .insert(SearchKeyword)
       .values({
         userId: session.user.id,
-        keyword: input.keyword,
+        keyword: input.keyword ?? null,
+        professionalRoles: input.professionalRoles ?? null,
         categoryId: input.categoryId ?? null,
         area: input.area,
         salaryFrom: input.salaryFrom,

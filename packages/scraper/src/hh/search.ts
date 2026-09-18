@@ -17,11 +17,15 @@ const HH_SEARCH_URL = "https://hh.ru/search/vacancy";
  */
 export function buildSearchUrl(options: HhSearchOptions, page = 0): string {
   const params = new URLSearchParams({
-    text: options.keyword,
     area: String(options.area ?? 113),
     per_page: "20",
     page: String(page),
   });
+
+  if (options.keyword) params.set("text", options.keyword);
+  for (const roleId of options.professionalRoles ?? []) {
+    params.append("professional_role", roleId);
+  }
 
   if (options.salaryFrom) params.set("salary", String(options.salaryFrom));
   if (options.experience) params.set("experience", options.experience);
@@ -170,7 +174,9 @@ export async function searchVacancies(
         } catch (err) {
           const msg = err instanceof Error ? err.message : JSON.stringify(err);
           errors.push(`Ошибка парсинга вакансии ${hhId}: ${msg}`);
-          log.error(`Ошибка парсинга вакансии ${hhId}`, { error: { message: msg } });
+          log.error(`Ошибка парсинга вакансии ${hhId}`, {
+            error: { message: msg },
+          });
           const fallback: ScrapedVacancyDetails = {
             ...summary,
             description: null,
@@ -201,7 +207,9 @@ export async function searchVacancies(
   await crawler.run();
 
   return {
-    keyword: options.keyword,
+    keyword:
+      options.keyword ??
+      `professional_role:${(options.professionalRoles ?? []).join(",")}`,
     vacancies,
     pagesScraped,
     errors,

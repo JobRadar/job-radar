@@ -15,7 +15,9 @@ export function loadCookies(cookiesPath: string): Cookie[] | null {
       return null;
     }
     if (isAuthenticated(cookies)) return cookies;
-    logger.info("Сессия истекла, требуется повторная авторизация", { cookiesPath });
+    logger.info("Сессия истекла, требуется повторная авторизация", {
+      cookiesPath,
+    });
     return null;
   } catch (error) {
     logger.error("Ошибка при загрузке cookies", error, { cookiesPath });
@@ -62,7 +64,10 @@ export async function loginToHh(
 
     const page = context.pages()[0] ?? (await context.newPage());
 
-    await page.goto(HH_LOGIN_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.goto(HH_LOGIN_URL, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
     await page.locator('button[data-qa="submit-button"]').click();
 
     await page

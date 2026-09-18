@@ -12,6 +12,7 @@ export const list = protectedProcedure.handler(async ({ context }) => {
     .select({
       id: SearchKeyword.id,
       keyword: SearchKeyword.keyword,
+      professionalRoles: SearchKeyword.professionalRoles,
       categoryId: SearchKeyword.categoryId,
       categoryLabel: Category.label,
       area: SearchKeyword.area,

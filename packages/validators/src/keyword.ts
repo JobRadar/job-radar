@@ -40,7 +40,12 @@ export const workFormatField = z
 
 /** Входные данные формы ключевого слова поиска вакансий. */
 export const keywordFormSchema = z.object({
-  keyword: z.string().min(1, "Укажите ключевое слово").max(256),
+  keyword: z.string().max(256).optional(),
+  /**
+   * ID специализаций hh.ru (professional_role) — см. IT_PROFESSIONAL_ROLES
+   * в этом пакете. Позволяет искать по всей IT-сфере без текста.
+   */
+  professionalRoles: z.array(z.string()).max(30).optional(),
   /** Категория (роль); вакансии наследуют её при скрапинге */
   categoryId: z.string().uuid().nullable().optional(),
   /** Код региона hh.ru: 113 — вся Россия, 1 — Москва, 2 — СПб */

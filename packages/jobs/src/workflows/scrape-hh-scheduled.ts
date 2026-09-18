@@ -42,7 +42,7 @@ scrapeHhScheduledWorkflow.task({
 
     return {
       dispatched: runs.length,
-      keywords: keywords.map((kw) => kw.keyword),
+      keywords: keywords.map((kw) => kw.keyword ?? "(по IT-ролям)"),
     };
   },
 });

@@ -1,6 +1,6 @@
-import { loginToHh } from "./hh/auth.js";
-import { getScraperConfig } from "./config.js";
 import { logger } from "@job-radar/config";
+import { getScraperConfig } from "./config.js";
+import { loginToHh } from "./hh/auth.js";
 
 const args = process.argv.slice(2);
 
