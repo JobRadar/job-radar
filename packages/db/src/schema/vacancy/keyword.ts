@@ -17,7 +17,14 @@ export const SearchKeyword = pgTable("search_keywords", (t) => ({
     .references(() => user.id, { onDelete: "cascade" }),
   /** Категория (роль), под которую ведётся поиск; наследуется вакансиями */
   categoryId: t.uuid().references(() => Category.id, { onDelete: "set null" }),
-  keyword: t.varchar({ length: 256 }).notNull(),
+  /** Текстовый запрос hh.ru. Может отсутствовать, если задан professionalRoles */
+  keyword: t.varchar({ length: 256 }),
+  /**
+   * ID специализаций hh.ru (professional_role), например "96" — «Программист,
+   * разработчик». Позволяет искать по всей IT-сфере без текстового запроса.
+   * Справочник: `IT_PROFESSIONAL_ROLES` в @job-radar/scraper.
+   */
+  professionalRoles: t.jsonb().$type<string[]>(),
   /** Код региона hh.ru: 1 — Москва, 2 — Санкт-Петербург, 0 — вся Россия */
   area: t.integer().default(113).notNull(), // 113 = вся Россия
   salaryFrom: t.integer(),
@@ -40,7 +47,8 @@ export const SearchKeyword = pgTable("search_keywords", (t) => ({
 }));
 
 export const CreateSearchKeywordSchema = createInsertSchema(SearchKeyword, {
-  keyword: z.string().min(1).max(256),
+  keyword: z.string().max(256).optional(),
+  professionalRoles: z.array(z.string()).max(30).optional(),
   area: z.number().int().default(113),
   salaryFrom: z.number().int().positive().optional(),
   salaryTo: z.number().int().positive().optional(),

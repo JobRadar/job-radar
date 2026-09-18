@@ -43,9 +43,20 @@ export const Vacancy = pgTable("vacancies", (t) => ({
   description: t.text(),
   url: t.varchar({ length: 1024 }).notNull(),
   publishedAt: t.timestamp({ mode: "date", withTimezone: true }),
+  /**
+   * Число откликов на вакансию. На hh.ru недоступно скрапингом с обычного
+   * аккаунта соискателя — планируется получать через мобильное API.
+   */
+  applicantsCount: t.integer(),
+  applicantsCountUpdatedAt: t.timestamp({ mode: "date", withTimezone: true }),
+  /** Момент, когда вакансия последний раз встретилась при скрапинге */
+  lastSeenAt: t
+    .timestamp({ mode: "date", withTimezone: true })
+    .defaultNow()
+    .notNull(),
   /** Вакансия ещё не просмотрена пользователем */
   isNew: t.boolean().default(true).notNull(),
-  /** Вакансия скрыта / архивирована */
+  /** Вакансия скрыта / архивирована (вручную или автоматически по lastSeenAt) */
   isArchived: t.boolean().default(false).notNull(),
   createdAt: t.timestamp().defaultNow().notNull(),
 }));
