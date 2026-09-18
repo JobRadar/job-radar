@@ -11,6 +11,7 @@ export const metadata = {
   title: "Ключевые слова",
 };
 
+/** Загружает поисковые запросы и категории для страницы управления. */
 export default async function KeywordsPage() {
   const [{ items }, { items: categories }] = await Promise.all([
     api.keyword.list(),

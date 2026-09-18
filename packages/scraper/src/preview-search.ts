@@ -48,6 +48,7 @@ function parseArgs(): CliArgs {
 
 const HH_BASE = "https://hh.ru";
 
+/** Запускает интерактивный предпросмотр поисковой выдачи hh.ru. */
 async function main() {
   const config = getScraperConfig();
   const cli = parseArgs();

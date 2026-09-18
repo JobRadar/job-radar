@@ -48,6 +48,7 @@ function write(level: LogLevel, message: string, meta?: LogMeta): void {
   else console.log(line);
 }
 
+/** Подключает завершение процесса при необработанных ошибках. */
 function setupGlobalErrorHandlers() {
   process.on("uncaughtException", (error) => {
     logger.error("Необработанное исключение", error, {

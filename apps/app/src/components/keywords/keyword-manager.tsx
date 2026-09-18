@@ -86,6 +86,7 @@ interface KeywordManagerProps {
   categories: CategoryRow[];
 }
 
+/** Управляет созданием и редактированием поисковых запросов вакансий. */
 export function KeywordManager({ items, categories }: KeywordManagerProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -100,6 +101,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     (typeof ALL_WORK_FORMATS)[number][]
   >(["REMOTE"]);
 
+  /** Обновляет кэш запросов и серверные данные страницы. */
   async function invalidate() {
     await queryClient.invalidateQueries({ queryKey: orpc.keyword.key() });
     router.refresh();
@@ -140,18 +142,21 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     onError: (err: Error) => toast.error(err.message || "Не удалось удалить"),
   });
 
+  /** Переключает формат работы в форме создания запроса. */
   function toggleWorkFormatCreate(value: (typeof ALL_WORK_FORMATS)[number]) {
     setWorkFormat((curr) =>
       curr.includes(value) ? curr.filter((v) => v !== value) : [...curr, value],
     );
   }
 
+  /** Добавляет или удаляет IT-роль в форме создания запроса. */
   function toggleProfessionalRole(id: string) {
     setProfessionalRoles((curr) =>
       curr.includes(id) ? curr.filter((v) => v !== id) : [...curr, id],
     );
   }
 
+  /** Проверяет и отправляет форму создания поискового запроса. */
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!keyword.trim() && professionalRoles.length === 0) {
@@ -173,6 +178,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     });
   }
 
+  /** Собирает общие поля запроса для последующего обновления. */
   function buildUpdatePayload(row: KeywordItem) {
     return {
       id: row.id,
@@ -188,6 +194,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     };
   }
 
+  /** Обновляет категорию сохранённого поискового запроса. */
   function changeCategory(row: KeywordItem, value: string) {
     updateMutation.mutate({
       ...buildUpdatePayload(row),
@@ -195,10 +202,12 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     });
   }
 
+  /** Включает или отключает сохранённый поисковый запрос. */
   function toggleActive(row: KeywordItem, next: boolean) {
     updateMutation.mutate({ ...buildUpdatePayload(row), isActive: next });
   }
 
+  /** Переключает формат работы в сохранённом поисковом запросе. */
   function toggleWorkFormat(
     row: KeywordItem,
     value: (typeof ALL_WORK_FORMATS)[number],
@@ -213,6 +222,7 @@ export function KeywordManager({ items, categories }: KeywordManagerProps) {
     });
   }
 
+  /** Подтверждает и удаляет сохранённый поисковый запрос. */
   function handleDelete(row: KeywordItem) {
     const confirmed = window.confirm(
       `Удалить «${rowLabel(row)}»? Вместе с ним удалятся связанные вакансии. Действие необратимо.`,

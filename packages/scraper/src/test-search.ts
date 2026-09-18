@@ -75,6 +75,7 @@ interface ScrapeResult {
   errors: string[];
 }
 
+/** Открывает выдачу hh.ru и возвращает детали первой найденной вакансии. */
 async function scrapeFirstVacancy(
   options: HhSearchOptions,
   headless: boolean,

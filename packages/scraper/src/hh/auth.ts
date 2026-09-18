@@ -6,6 +6,7 @@ import { chromium } from "playwright";
 
 const HH_LOGIN_URL = "https://hh.ru/account/login";
 
+/** Загружает сохранённые cookies, если они валидны и сессия ещё активна. */
 export function loadCookies(cookiesPath: string): Cookie[] | null {
   try {
     if (!existsSync(cookiesPath)) return null;
@@ -45,6 +46,7 @@ export interface LoginCredentials {
   password: string;
 }
 
+/** Авторизуется на hh.ru и сохраняет cookies созданной сессии. */
 export async function loginToHh(
   credentials: LoginCredentials,
   cookiesPath: string,
