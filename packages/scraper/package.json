@@ -1,0 +1,38 @@
+{
+  "name": "@job-radar/scraper",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules storage",
+    "dev": "bun run src/index.ts",
+    "login": "tsx --env-file=../../.env src/cli.ts",
+    "preview-login": "tsx --env-file=../../.env src/preview-search.ts --login-only",
+    "preview-search": "tsx --env-file=../../.env src/preview-search.ts",
+    "test-search": "tsx --env-file=../../.env src/test-search.ts",
+    "format": "biome format .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false",
+    "playwright:install": "playwright install chromium --with-deps"
+  },
+  "dependencies": {
+    "@crawlee/playwright": "3.18.1",
+    "@job-radar/config": "workspace:*",
+    "@job-radar/validators": "workspace:*",
+    "crawlee": "3.18.1",
+    "playwright": "1.63.0"
+  },
+  "devDependencies": {
+    "@job-radar/tsconfig": "workspace:*",
+    "@types/node": "26.6.1",
+    "typescript": "7.0.2"
+  }
+}

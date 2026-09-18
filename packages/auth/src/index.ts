@@ -1,0 +1,91 @@
+import { db } from "@job-radar/db";
+import type { BetterAuthOptions, BetterAuthPlugin } from "better-auth";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { emailOTP, oAuthProxy } from "better-auth/plugins";
+
+export function initAuth<
+  TExtraPlugins extends BetterAuthPlugin[] = [],
+>(options: {
+  baseUrl: string;
+  productionUrl: string;
+  secret: string | undefined;
+  googleClientId?: string;
+  googleClientSecret?: string;
+  sendEmail?: (data: {
+    email: string;
+    otp?: string;
+    url?: string;
+    type: "sign-in" | "email-verification" | "forget-password" | "change-email";
+  }) => Promise<void>;
+  extraPlugins?: TExtraPlugins;
+}) {
+  const config = {
+    database: drizzleAdapter(db, {
+      provider: "pg",
+    }),
+    baseURL: options.baseUrl,
+    secret: options.secret,
+    /**
+     * Built-in rate limiting protects auth endpoints (sign-in, OTP, password
+     * reset) from brute-force and abuse. Tune per environment as needed.
+     * @see https://www.better-auth.com/docs/concepts/rate-limit
+     */
+    rateLimit: {
+      enabled: true,
+      window: 60,
+      max: 100,
+    },
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+      sendResetPassword: async ({ user, url }) => {
+        if (options.sendEmail) {
+          await options.sendEmail({
+            email: user.email,
+            url,
+            type: "forget-password",
+          });
+        }
+      },
+    },
+    plugins: [
+      oAuthProxy({
+        productionURL: options.productionUrl,
+      }),
+      emailOTP({
+        async sendVerificationOTP(data) {
+          if (options.sendEmail) {
+            await options.sendEmail({
+              email: data.email,
+              otp: data.otp,
+              type: data.type,
+            });
+          }
+        },
+      }),
+      ...(options.extraPlugins ?? []),
+    ],
+    socialProviders:
+      options.googleClientId && options.googleClientSecret
+        ? {
+            google: {
+              clientId: options.googleClientId,
+              clientSecret: options.googleClientSecret,
+              redirectURI: `${options.productionUrl}/api/auth/callback/google`,
+            },
+          }
+        : {},
+    onAPIError: {
+      onError(error, ctx) {
+        // biome-ignore lint/suspicious/noConsole: Auth API error logging
+        console.error("BETTER AUTH API ERROR", error, ctx);
+      },
+    },
+  } satisfies BetterAuthOptions;
+
+  return betterAuth(config);
+}
+
+export type Auth = ReturnType<typeof initAuth>;
+export type Session = Auth["$Infer"]["Session"];

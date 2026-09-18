@@ -1,0 +1,45 @@
+{
+  "name": "@job-radar/emails",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    ".react-email"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "dev:email": "bun --env-file=../../.env run email dev -p 3002",
+    "build": "tsdown",
+    "export": "email export"
+  },
+  "dependencies": {
+    "@job-radar/config": "workspace:*",
+    "@job-radar/tsconfig": "workspace:*",
+    "@radix-ui/colors": "3.0.0",
+    "@react-email/components": "1.0.12",
+    "@tailwindcss/typography": "0.5.20",
+    "nodemailer": "^10.0.10",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-email": "6.9.5",
+    "resend": "^6.28.1",
+    "sharp": "^0.35.4",
+    "tailwindcss": "4.3.3",
+    "tailwindcss-animate": "1.0.7",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@react-email/preview-server": "5.2.10",
+    "@types/node": "26.6.1",
+    "@types/nodemailer": "^8.0.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tsdown": "latest",
+    "typescript": "7.0.2"
+  }
+}

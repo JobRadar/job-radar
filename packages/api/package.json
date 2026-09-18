@@ -1,0 +1,39 @@
+{
+  "name": "@job-radar/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "tsc",
+    "format": "biome format .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@job-radar/ai": "workspace:*",
+    "@job-radar/auth": "workspace:*",
+    "@job-radar/config": "workspace:*",
+    "@job-radar/db": "workspace:*",
+    "@job-radar/jobs": "workspace:*",
+    "@job-radar/validators": "workspace:*",
+    "@orpc/contract": "^1.15.1",
+    "@orpc/server": "^1.15.1",
+    "better-auth": "1.7.5",
+    "superjson": "2.2.6",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@job-radar/tsconfig": "workspace:*",
+    "@types/node": "26.6.1",
+    "typescript": "7.0.2"
+  }
+}

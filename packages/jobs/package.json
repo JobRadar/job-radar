@@ -1,0 +1,36 @@
+{
+  "name": "@job-radar/jobs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./triggers": {
+      "types": "./dist/triggers.d.ts",
+      "default": "./src/triggers.ts"
+    }
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "bun run --env-file=../../.env src/worker.ts",
+    "format": "biome format .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@hatchet-dev/typescript-sdk": "1.33.1",
+    "@job-radar/ai": "workspace:*",
+    "@job-radar/db": "workspace:*",
+    "@job-radar/scraper": "workspace:*"
+  },
+  "devDependencies": {
+    "@job-radar/tsconfig": "workspace:*",
+    "@types/node": "26.6.1",
+    "typescript": "7.0.2"
+  }
+}
