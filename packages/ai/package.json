@@ -20,13 +20,13 @@
   },
   "dependencies": {
     "@job-radar/config": "workspace:*",
-    "@openrouter/ai-sdk-provider": "3.0.0",
-    "ai": "7.0.106",
+    "@openrouter/ai-sdk-provider": "3.1.0",
+    "ai": "7.0.107",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.6.1",
+    "@types/node": "26.6.2",
     "typescript": "7.0.2"
   }
 }

@@ -16,12 +16,12 @@
   },
   "dependencies": {
     "@tailwindcss/postcss": "4.3.3",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.28",
     "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.6.1",
+    "@types/node": "26.6.2",
     "typescript": "7.0.2"
   }
 }

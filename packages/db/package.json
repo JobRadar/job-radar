@@ -44,8 +44,8 @@
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
     "@types/bun": "1.4.2",
-    "@types/node": "26.6.1",
-    "@types/pg": "^8.20.0",
+    "@types/node": "26.6.2",
+    "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.10",
     "typescript": "7.0.2"
