@@ -20,6 +20,9 @@ export function buildSearchUrl(options: HhSearchOptions, page = 0): string {
     area: String(options.area ?? 113),
     per_page: "20",
     page: String(page),
+    // Сортировка по дате публикации — свежие вакансии должны попадать в
+    // начало очереди на скрапинг раньше более старых.
+    order_by: "publication_time",
   });
 
   if (options.keyword) params.set("text", options.keyword);

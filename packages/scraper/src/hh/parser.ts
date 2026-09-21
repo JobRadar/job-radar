@@ -216,14 +216,20 @@ export async function parseSearchPage(
             "";
 
           const employerEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
+            '[data-qa="vacancy-serp__vacancy-employer-text"], [data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
           );
+          // В текущей вёрстке (Magritte) у блока зарплаты нет своего data-qa —
+          // это первый прямой <span> внутри контейнера с классом
+          // "compensation-labels" (остальные прямые дети — теги в <div>).
           const salaryEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-compensation"]',
+            '[data-qa="vacancy-serp__vacancy-compensation"], [class*="compensation-labels"] > span',
           );
           const areaEl = card.querySelector(
             '[data-qa="vacancy-serp__vacancy-address"], [data-qa="vacancy-serp__vacancy-address-text"]',
           );
+          // Дата публикации по карточке выдачи в текущей вёрстке hh.ru
+          // (Magritte) не имеет стабильного маркера — оставляем селектор
+          // старого дизайна как fallback, но по факту почти всегда null.
           const dateEl = card.querySelector(
             '[data-qa="vacancy-serp__vacancy-date"]',
           );
@@ -334,8 +340,11 @@ export async function parseVacancyPage(
   page: Page,
   summary: ScrapedVacancySummary,
 ): Promise<ScrapedVacancyDetails> {
-  let details: Omit<ScrapedVacancyDetails, keyof ScrapedVacancySummary> | null =
-    null;
+  let details:
+    | (Omit<ScrapedVacancyDetails, keyof ScrapedVacancySummary> & {
+        publishedAt: Date | null;
+      })
+    | null = null;
   try {
     logger.info("parseVacancyPage: выполняем evaluate на странице вакансии", {
       url: page.url(),
@@ -353,6 +362,7 @@ export async function parseVacancyPage(
       scheduleRaw: string | null;
       employerLogoUrl: string | null;
       employerUrl: string | null;
+      datePostedRaw: string | null;
     };
 
     const evalResult: EvalResult = await page.evaluate(() => {
@@ -374,9 +384,12 @@ export async function parseVacancyPage(
             .filter((v, i, arr) => v.length > 0 && arr.indexOf(v) === i)
         : [];
 
+      // Каждый навык — отдельный элемент [data-qa="skills-element"] (Magritte,
+      // текст лежит во вложенном div без стабильного data-qa — берём весь
+      // textContent элемента). bloko-tag__text — fallback для старой вёрстки.
       const skills = Array.from(
         document.querySelectorAll(
-          '[data-qa="skills-element"] span, [data-qa="bloko-tag__text"]',
+          '[data-qa="skills-element"], [data-qa="bloko-tag__text"]',
         ),
       )
         .map((el) => el.textContent?.trim() ?? "")
@@ -395,6 +408,23 @@ export async function parseVacancyPage(
       );
       const scheduleRaw = workFormatsEl?.textContent?.trim() ?? null;
 
+      // Дата публикации на карточке выдачи ничем не помечена (см.
+      // buildSearchUrl), но hh.ru кладёт её в JSON-LD (schema.org/JobPosting)
+      // на самой странице вакансии — это стабильный источник даты.
+      let datePostedRaw: string | null = null;
+      try {
+        const ldScript = document.querySelector(
+          'script[type="application/ld+json"]',
+        );
+        if (ldScript?.textContent) {
+          const data = JSON.parse(ldScript.textContent);
+          datePostedRaw =
+            typeof data?.datePosted === "string" ? data.datePosted : null;
+        }
+      } catch {
+        datePostedRaw = null;
+      }
+
       return {
         description,
         descTextLen,
@@ -404,18 +434,15 @@ export async function parseVacancyPage(
         experience:
           document
             .querySelector('[data-qa="vacancy-experience"]')
-            ?.textContent?.trim() ??
-          document
-            .querySelector('[data-qa="vacancy-view-employment-mode"]')
-            ?.textContent?.trim() ??
-          null,
+            ?.textContent?.trim() ?? null,
         employment:
           document
-            .querySelector('[data-qa="vacancy-view-employment-mode"]')
+            .querySelector('[data-qa="common-employment-text"]')
             ?.textContent?.trim() ?? null,
         scheduleRaw,
         employerLogoUrl: logoEl?.src ?? null,
         employerUrl: companyLinkEl?.href ?? null,
+        datePostedRaw,
       };
     });
 
@@ -430,6 +457,12 @@ export async function parseVacancyPage(
         null
       : null;
 
+    const parsedDate = evalResult.datePostedRaw
+      ? new Date(evalResult.datePostedRaw)
+      : null;
+    const publishedAt =
+      parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null;
+
     details = {
       description: evalResult.description,
       hiringFormats: evalResult.hiringFormats,
@@ -439,6 +472,7 @@ export async function parseVacancyPage(
       schedule: scheduleClean,
       employerLogoUrl: evalResult.employerLogoUrl,
       employerUrl: evalResult.employerUrl,
+      publishedAt,
     };
   } catch (err) {
     logger.error("parseVacancyPage: evaluate выбросил ошибку", err);
