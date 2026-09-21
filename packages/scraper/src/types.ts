@@ -41,6 +41,19 @@ export interface HhSearchOptions {
    * Позволяет сохранять вакансию в БД по одной, не накапливая весь массив.
    */
   onVacancy?: (vacancy: ScrapedVacancyDetails) => Promise<void>;
+  /**
+   * Проверка «уже видели эту вакансию раньше» (например, есть в БД).
+   * Если возвращает true — страница вакансии повторно НЕ открывается
+   * (экономим время и снижаем риск блокировки), вместо onVacancy вызывается
+   * onDuplicateVacancy с данными из карточки выдачи.
+   */
+  isKnownVacancy?: (hhId: string) => Promise<boolean>;
+  /**
+   * Коллбек для уже известных вакансий (см. isKnownVacancy) — вызывается
+   * вместо повторного скрапинга страницы вакансии. Обычно используется,
+   * чтобы обновить lastSeenAt/isArchived без повторного парсинга.
+   */
+  onDuplicateVacancy?: (summary: ScrapedVacancySummary) => Promise<void>;
 }
 
 /** Краткая карточка вакансии — парсится со страницы поисковой выдачи */
@@ -85,4 +98,9 @@ export interface ScrapeResult {
   vacancies: ScrapedVacancyDetails[];
   pagesScraped: number;
   errors: string[];
+  /**
+   * Сколько вакансий из выдачи уже были известны (isKnownVacancy → true) —
+   * их detail-страница повторно не открывалась.
+   */
+  duplicatesTouched: number;
 }

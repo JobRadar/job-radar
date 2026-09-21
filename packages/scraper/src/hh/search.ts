@@ -64,7 +64,8 @@ export async function searchVacancies(
   const summaries = new Map<string, ScrapedVacancySummary>();
   const errors: string[] = [];
   let pagesScraped = 0;
-  const { onVacancy } = options;
+  let duplicatesTouched = 0;
+  const { onVacancy, isKnownVacancy, onDuplicateVacancy } = options;
 
   // Изолируем хранилище crawlee для каждого запуска
   const storageDir = `${config.storageDir}/${Date.now()}`;
@@ -145,9 +146,16 @@ export async function searchVacancies(
           }
         }
 
-        // Ставим в очередь страницы каждой вакансии
+        // Ставим в очередь страницы каждой вакансии — кроме уже известных
+        // (isKnownVacancy), чтобы не открывать повторно то, что уже
+        // скрапили раньше.
         for (const s of found) {
           if (!s.hhId) continue;
+          if (isKnownVacancy && (await isKnownVacancy(s.hhId))) {
+            duplicatesTouched++;
+            if (onDuplicateVacancy) await onDuplicateVacancy(s);
+            continue;
+          }
           await queue.addRequest({
             url: s.url,
             label: LABEL.VACANCY,
@@ -216,5 +224,6 @@ export async function searchVacancies(
     vacancies,
     pagesScraped,
     errors,
+    duplicatesTouched,
   };
 }

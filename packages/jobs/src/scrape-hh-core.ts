@@ -5,6 +5,7 @@ import {
   getScraperConfig,
   resolveCookies,
   searchVacancies,
+  type ScrapedVacancySummary,
   type WorkFormat,
 } from "@job-radar/scraper";
 
@@ -30,6 +31,8 @@ export interface ScrapeKeywordParams {
 export interface ScrapeKeywordResult {
   vacanciesFound: number;
   vacanciesNew: number;
+  /** Уже были в БД — detail-страница повторно не открывалась, обновили lastSeenAt */
+  vacanciesTouched: number;
   errors: string[];
 }
 
@@ -62,54 +65,57 @@ export async function scrapeAndSaveKeyword(
     headless: true,
   });
 
-  const upsertVacancy = async (v: (typeof result.vacancies)[number]) => {
-    if (!v.hhId) return;
+  // Уже видели эту вакансию раньше? Тогда searchVacancies не станет
+  // повторно открывать её detail-страницу — только вызовет
+  // onDuplicateVacancy с данными из карточки выдачи.
+  const isKnownVacancy = async (hhId: string) => {
     const existing = await db.query.Vacancy.findFirst({
-      where: eq(Vacancy.hhId, v.hhId),
+      where: eq(Vacancy.hhId, hhId),
       columns: { id: true },
     });
-    if (existing) {
-      await db
-        .update(Vacancy)
-        .set({
-          title: v.title,
-          employerName: v.employerName ?? undefined,
-          employerUrl: v.employerUrl ?? undefined,
-          employerLogoUrl: v.employerLogoUrl ?? undefined,
-          salary: v.salary ?? undefined,
-          area: v.area ?? undefined,
-          experience: v.experience ?? undefined,
-          employment: v.employment ?? undefined,
-          schedule: v.schedule ?? undefined,
-          description: v.description ?? undefined,
-          skills: v.skills,
-          categoryId: categoryId ?? undefined,
-          publishedAt: v.publishedAt ?? undefined,
-          isArchived: false,
-          lastSeenAt: new Date(),
-        })
-        .where(eq(Vacancy.hhId, v.hhId));
-    } else {
-      await db.insert(Vacancy).values({
-        hhId: v.hhId,
-        keywordId,
-        categoryId: categoryId ?? undefined,
-        title: v.title,
-        employerName: v.employerName ?? undefined,
-        employerUrl: v.employerUrl ?? undefined,
-        employerLogoUrl: v.employerLogoUrl ?? undefined,
-        salary: v.salary ?? undefined,
-        area: v.area ?? undefined,
-        experience: v.experience ?? undefined,
-        employment: v.employment ?? undefined,
-        schedule: v.schedule ?? undefined,
-        description: v.description ?? undefined,
-        skills: v.skills,
-        url: v.url,
-        publishedAt: v.publishedAt ?? undefined,
+    return existing !== undefined;
+  };
+
+  // Для уже известных вакансий обновляем то, что видно прямо в карточке
+  // выдачи (без похода на detail-страницу) — и отмечаем, что вакансия
+  // всё ещё активна.
+  const onDuplicateVacancy = async (s: ScrapedVacancySummary) => {
+    await db
+      .update(Vacancy)
+      .set({
+        title: s.title,
+        employerName: s.employerName ?? undefined,
+        salary: s.salary ?? undefined,
+        area: s.area ?? undefined,
+        isArchived: false,
         lastSeenAt: new Date(),
-      });
-    }
+      })
+      .where(eq(Vacancy.hhId, s.hhId));
+  };
+
+  // isKnownVacancy уже отсеивает всё, кроме новых — сюда попадают только
+  // вакансии, которых ещё не было в БД.
+  const insertVacancy = async (v: (typeof result.vacancies)[number]) => {
+    if (!v.hhId) return;
+    await db.insert(Vacancy).values({
+      hhId: v.hhId,
+      keywordId,
+      categoryId: categoryId ?? undefined,
+      title: v.title,
+      employerName: v.employerName ?? undefined,
+      employerUrl: v.employerUrl ?? undefined,
+      employerLogoUrl: v.employerLogoUrl ?? undefined,
+      salary: v.salary ?? undefined,
+      area: v.area ?? undefined,
+      experience: v.experience ?? undefined,
+      employment: v.employment ?? undefined,
+      schedule: v.schedule ?? undefined,
+      description: v.description ?? undefined,
+      skills: v.skills,
+      url: v.url,
+      publishedAt: v.publishedAt ?? undefined,
+      lastSeenAt: new Date(),
+    });
   };
 
   const result = await searchVacancies(
@@ -121,34 +127,30 @@ export async function scrapeAndSaveKeyword(
       employment: employment ?? undefined,
       workFormat,
       maxPages: maxPages ?? Number(process.env.HH_SCRAPER_MAX_PAGES ?? "5"),
-      onVacancy: upsertVacancy,
+      onVacancy: insertVacancy,
+      isKnownVacancy,
+      onDuplicateVacancy,
     },
     { ...config, headless: true },
     cookies,
   );
 
-  let vacanciesNew = 0;
-  for (const v of result.vacancies) {
-    if (!v.hhId) continue;
-    const existing = await db.query.Vacancy.findFirst({
-      where: eq(Vacancy.hhId, v.hhId),
-      columns: { id: true },
-    });
-    if (!existing) vacanciesNew++;
-  }
+  const vacanciesNew = result.vacancies.length;
+  const vacanciesFound = vacanciesNew + result.duplicatesTouched;
 
   await db
     .update(ScrapeRun)
     .set({
-      vacanciesFound: result.vacancies.length,
+      vacanciesFound,
       vacanciesNew,
       error: result.errors.length > 0 ? result.errors.join("\n") : undefined,
     })
     .where(eq(ScrapeRun.id, scrapeRunId));
 
   return {
-    vacanciesFound: result.vacancies.length,
+    vacanciesFound,
     vacanciesNew,
+    vacanciesTouched: result.duplicatesTouched,
     errors: result.errors,
   };
 }

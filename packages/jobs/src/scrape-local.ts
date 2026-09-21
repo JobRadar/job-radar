@@ -61,18 +61,19 @@ async function scrapeKeyword(keyword: SearchKeywordRow, maxPagesArg?: number) {
         .filter((v): v is WorkFormat => ALLOWED.has(v))
     : undefined;
 
-  const { vacanciesFound, vacanciesNew, errors } = await scrapeAndSaveKeyword({
-    scrapeRunId: scrapeRun.id,
-    keywordId: keyword.id,
-    categoryId: keyword.categoryId ?? undefined,
-    keyword: keyword.keyword ?? undefined,
-    professionalRoles: keyword.professionalRoles ?? undefined,
-    area: keyword.area,
-    experience: keyword.experience ?? undefined,
-    employment: keyword.employment ?? undefined,
-    workFormat,
-    maxPages: maxPagesArg,
-  });
+  const { vacanciesFound, vacanciesNew, vacanciesTouched, errors } =
+    await scrapeAndSaveKeyword({
+      scrapeRunId: scrapeRun.id,
+      keywordId: keyword.id,
+      categoryId: keyword.categoryId ?? undefined,
+      keyword: keyword.keyword ?? undefined,
+      professionalRoles: keyword.professionalRoles ?? undefined,
+      area: keyword.area,
+      experience: keyword.experience ?? undefined,
+      employment: keyword.employment ?? undefined,
+      workFormat,
+      maxPages: maxPagesArg,
+    });
 
   const { archivedCount } = await archiveStaleVacancies(keyword.id);
 
@@ -82,7 +83,7 @@ async function scrapeKeyword(keyword: SearchKeywordRow, maxPagesArg?: number) {
     .where(eq(ScrapeRun.id, scrapeRun.id));
 
   console.log(
-    `Найдено: ${vacanciesFound}, новых: ${vacanciesNew}, заархивировано: ${archivedCount}`,
+    `Найдено: ${vacanciesFound}, новых: ${vacanciesNew}, уже известных: ${vacanciesTouched}, заархивировано: ${archivedCount}`,
   );
   if (errors.length > 0) {
     console.warn("Ошибки:", errors);
