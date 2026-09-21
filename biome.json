@@ -77,7 +77,8 @@
       "includes": [
         "**/packages/scraper/src/cli.ts",
         "**/packages/scraper/src/preview-search.ts",
-        "**/packages/scraper/src/test-search.ts"
+        "**/packages/scraper/src/test-search.ts",
+        "**/packages/jobs/src/scrape-local.ts"
       ],
       "linter": {
         "rules": {

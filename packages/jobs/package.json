@@ -17,6 +17,7 @@
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "bun run --env-file=../../.env src/worker.ts",
+    "scrape:local": "bun run --env-file=../../.env src/scrape-local.ts",
     "format": "biome format .",
     "lint": "biome lint .",
     "check": "biome check .",

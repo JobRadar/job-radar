@@ -21,6 +21,10 @@ import { scrapeHhScheduledWorkflow } from "./workflows/scrape-hh-scheduled";
  * The worker connects to Hatchet using HATCHET_CLIENT_TOKEN.
  * Set it in your .env file before running.
  *
+ * Нужно просто прогнать скрапинг hh.ru локально, без Hatchet и без токена?
+ * Используйте `bun run scrape:local` (см. `scrape-local.ts`) — та же логика
+ * скрапинга, но без Hatchet-воркера и очереди.
+ *
  * @see https://docs.hatchet.run/home/workers
  */
 async function main() {
