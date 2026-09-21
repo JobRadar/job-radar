@@ -11,6 +11,10 @@ export interface ScraperConfig {
   maxRetries: number;
   /** Показывать браузер (false = headless) */
   headless: boolean;
+  /** Сколько ждать (мс) перед повторной попыткой, если hh.ru показал капчу */
+  captchaWaitMs: number;
+  /** Сколько раз ждать captchaWaitMs и пробовать снова, прежде чем сдаться */
+  captchaMaxAttempts: number;
 }
 
 export function getScraperConfig(): ScraperConfig {
@@ -24,5 +28,9 @@ export function getScraperConfig(): ScraperConfig {
     ],
     maxRetries: Number(process.env.HH_SCRAPER_MAX_RETRIES ?? "2"),
     headless: process.env.HH_SCRAPER_HEADLESS !== "false",
+    captchaWaitMs: Number(process.env.HH_SCRAPER_CAPTCHA_WAIT_MS ?? "300000"),
+    captchaMaxAttempts: Number(
+      process.env.HH_SCRAPER_CAPTCHA_MAX_ATTEMPTS ?? "3",
+    ),
   };
 }

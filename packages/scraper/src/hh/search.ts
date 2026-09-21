@@ -88,7 +88,14 @@ export async function searchVacancies(
     maxConcurrency: config.maxConcurrency,
     maxRequestRetries: config.maxRetries,
     minConcurrency: 1,
-    requestHandlerTimeoutSecs: 60,
+    // Базовые 60с на парсинг страницы + запас на все попытки переждать
+    // капчу (captchaMaxAttempts × captchaWaitMs), иначе crawlee оборвёт
+    // обработчик по таймауту раньше, чем мы успеем дождаться разблокировки.
+    requestHandlerTimeoutSecs:
+      60 +
+      Math.ceil(
+        (config.captchaMaxAttempts * (config.captchaWaitMs + 60_000)) / 1000,
+      ),
 
     launchContext: {
       launchOptions: {
@@ -115,16 +122,36 @@ export async function searchVacancies(
       log,
     }: PlaywrightCrawlingContext) => {
       // hh.ru может показать антибот-капчу вместо любой страницы (и выдачи,
-      // и вакансии) — если так, дальше скрапить бесполезно (ретраи капчу не
-      // решат), останавливаем весь прогон и просим пользователя решить её
-      // руками.
+      // и вакансии). Обычно блокировка временная — ждём и пробуем ту же
+      // страницу снова; если капча не проходит после нескольких попыток,
+      // останавливаем весь прогон совсем (дальше ждать бессмысленно).
       if (await isCaptchaPage(page)) {
-        captchaError = new CaptchaDetectedError(request.url);
-        log.error("hh.ru показал капчу — останавливаю скрапинг", {
-          url: request.url,
-        });
-        crawler.stop("captcha-detected");
-        return;
+        let stillBlocked = true;
+        for (let attempt = 1; attempt <= config.captchaMaxAttempts; attempt++) {
+          log.warning(
+            `hh.ru показал капчу, жду ${Math.round(config.captchaWaitMs / 1000)}с и пробую снова (${attempt}/${config.captchaMaxAttempts})`,
+            { url: request.url },
+          );
+          await page.waitForTimeout(config.captchaWaitMs);
+          await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
+          if (!(await isCaptchaPage(page))) {
+            stillBlocked = false;
+            log.info("Капча прошла, продолжаю скрапинг", {
+              url: request.url,
+            });
+            break;
+          }
+        }
+
+        if (stillBlocked) {
+          captchaError = new CaptchaDetectedError(request.url);
+          log.error(
+            "hh.ru всё ещё показывает капчу после нескольких попыток — останавливаю скрапинг",
+            { url: request.url },
+          );
+          crawler.stop("captcha-still-blocked");
+          return;
+        }
       }
 
       const label = request.label as keyof typeof LABEL | undefined;
