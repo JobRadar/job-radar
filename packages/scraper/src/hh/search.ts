@@ -8,6 +8,7 @@ import type {
   ScrapedVacancySummary,
   ScrapeResult,
 } from "../types";
+import { CaptchaDetectedError, isCaptchaPage } from "./captcha";
 import { getNextPageUrl, parseSearchPage, parseVacancyPage } from "./parser";
 
 const HH_SEARCH_URL = "https://hh.ru/search/vacancy";
@@ -65,6 +66,7 @@ export async function searchVacancies(
   const errors: string[] = [];
   let pagesScraped = 0;
   let duplicatesTouched = 0;
+  let captchaError: CaptchaDetectedError | null = null;
   const { onVacancy, isKnownVacancy, onDuplicateVacancy } = options;
 
   // Изолируем хранилище crawlee для каждого запуска
@@ -112,6 +114,19 @@ export async function searchVacancies(
       request,
       log,
     }: PlaywrightCrawlingContext) => {
+      // hh.ru может показать антибот-капчу вместо любой страницы (и выдачи,
+      // и вакансии) — если так, дальше скрапить бесполезно (ретраи капчу не
+      // решат), останавливаем весь прогон и просим пользователя решить её
+      // руками.
+      if (await isCaptchaPage(page)) {
+        captchaError = new CaptchaDetectedError(request.url);
+        log.error("hh.ru показал капчу — останавливаю скрапинг", {
+          url: request.url,
+        });
+        crawler.stop("captcha-detected");
+        return;
+      }
+
       const label = request.label as keyof typeof LABEL | undefined;
 
       // ── Страница поисковой выдачи ──────────────────────────────────────────
@@ -216,6 +231,10 @@ export async function searchVacancies(
   });
 
   await crawler.run();
+
+  if (captchaError) {
+    throw captchaError;
+  }
 
   return {
     keyword:

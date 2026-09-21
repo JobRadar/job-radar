@@ -18,8 +18,11 @@ export function getScraperConfig(): ScraperConfig {
     storageDir: process.env.CRAWLEE_STORAGE_DIR ?? "./storage/crawlee",
     cookiesPath: process.env.HH_COOKIES_PATH ?? "./storage/hh-cookies.json",
     maxConcurrency: Number(process.env.HH_SCRAPER_CONCURRENCY ?? "2"),
-    requestDelay: [1500, 3500],
-    maxRetries: 3,
+    requestDelay: [
+      Number(process.env.HH_SCRAPER_REQUEST_DELAY_MIN_MS ?? "3000"),
+      Number(process.env.HH_SCRAPER_REQUEST_DELAY_MAX_MS ?? "7000"),
+    ],
+    maxRetries: Number(process.env.HH_SCRAPER_MAX_RETRIES ?? "2"),
     headless: process.env.HH_SCRAPER_HEADLESS !== "false",
   };
 }

@@ -1,7 +1,7 @@
 import { eq } from "@job-radar/db";
 import { db } from "@job-radar/db/client";
 import { ScrapeRun, SearchKeyword } from "@job-radar/db/schema";
-import type { WorkFormat } from "@job-radar/scraper";
+import { CaptchaDetectedError, type WorkFormat } from "@job-radar/scraper";
 import { archiveStaleVacancies, scrapeAndSaveKeyword } from "./scrape-hh-core";
 
 /**
@@ -61,32 +61,47 @@ async function scrapeKeyword(keyword: SearchKeywordRow, maxPagesArg?: number) {
         .filter((v): v is WorkFormat => ALLOWED.has(v))
     : undefined;
 
-  const { vacanciesFound, vacanciesNew, vacanciesTouched, errors } =
-    await scrapeAndSaveKeyword({
-      scrapeRunId: scrapeRun.id,
-      keywordId: keyword.id,
-      categoryId: keyword.categoryId ?? undefined,
-      keyword: keyword.keyword ?? undefined,
-      professionalRoles: keyword.professionalRoles ?? undefined,
-      area: keyword.area,
-      experience: keyword.experience ?? undefined,
-      employment: keyword.employment ?? undefined,
-      workFormat,
-      maxPages: maxPagesArg,
-    });
+  try {
+    const { vacanciesFound, vacanciesNew, vacanciesTouched, errors } =
+      await scrapeAndSaveKeyword({
+        scrapeRunId: scrapeRun.id,
+        keywordId: keyword.id,
+        categoryId: keyword.categoryId ?? undefined,
+        keyword: keyword.keyword ?? undefined,
+        professionalRoles: keyword.professionalRoles ?? undefined,
+        area: keyword.area,
+        experience: keyword.experience ?? undefined,
+        employment: keyword.employment ?? undefined,
+        workFormat,
+        maxPages: maxPagesArg,
+      });
 
-  const { archivedCount } = await archiveStaleVacancies(keyword.id);
+    const { archivedCount } = await archiveStaleVacancies(keyword.id);
 
-  await db
-    .update(ScrapeRun)
-    .set({ status: "completed", completedAt: new Date() })
-    .where(eq(ScrapeRun.id, scrapeRun.id));
+    await db
+      .update(ScrapeRun)
+      .set({ status: "completed", completedAt: new Date() })
+      .where(eq(ScrapeRun.id, scrapeRun.id));
 
-  console.log(
-    `Найдено: ${vacanciesFound}, новых: ${vacanciesNew}, уже известных: ${vacanciesTouched}, заархивировано: ${archivedCount}`,
-  );
-  if (errors.length > 0) {
-    console.warn("Ошибки:", errors);
+    console.log(
+      `Найдено: ${vacanciesFound}, новых: ${vacanciesNew}, уже известных: ${vacanciesTouched}, заархивировано: ${archivedCount}`,
+    );
+    if (errors.length > 0) {
+      console.warn("Ошибки:", errors);
+    }
+  } catch (err) {
+    // Капча — не обычная ошибка прогона, а сигнал остановиться совсем
+    // (см. main().catch ниже). Помечаем прогон как failed, чтобы он не
+    // висел в БД вечно в статусе "running".
+    await db
+      .update(ScrapeRun)
+      .set({
+        status: "failed",
+        error: err instanceof Error ? err.message : String(err),
+        completedAt: new Date(),
+      })
+      .where(eq(ScrapeRun.id, scrapeRun.id));
+    throw err;
   }
 }
 
@@ -128,6 +143,13 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((err) => {
+    if (err instanceof CaptchaDetectedError) {
+      console.error(`\n🛑 ${err.message}`);
+      console.error(
+        "Решите капчу вручную в открывшемся окне браузера (нужен HH_SCRAPER_HEADLESS=false), затем запустите `bun run scrape:local` ещё раз.",
+      );
+      process.exit(2);
+    }
     console.error("\n❌ scrape-local провалился:", err);
     process.exit(1);
   });
