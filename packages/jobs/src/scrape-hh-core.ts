@@ -93,11 +93,15 @@ export async function scrapeAndSaveKeyword(
       .where(eq(Vacancy.hhId, s.hhId));
   };
 
-  // isKnownVacancy уже отсеивает всё, кроме новых — сюда попадают только
-  // вакансии, которых ещё не было в БД.
+  // isKnownVacancy отсеивает большинство уже известных вакансий, но не
+  // защищает от гонки: одна и та же вакансия может найтись параллельно по
+  // двум разным keyword раньше, чем первая успеет записаться в БД. Поэтому
+  // вместо plain insert делаем upsert по hh_id (уникальному) — второй
+  // "insert" той же вакансии просто обновит запись вместо падения с
+  // ошибкой уникальности.
   const insertVacancy = async (v: (typeof result.vacancies)[number]) => {
     if (!v.hhId) return;
-    await db.insert(Vacancy).values({
+    const values = {
       hhId: v.hhId,
       keywordId,
       categoryId: categoryId ?? undefined,
@@ -115,7 +119,12 @@ export async function scrapeAndSaveKeyword(
       url: v.url,
       publishedAt: v.publishedAt ?? undefined,
       lastSeenAt: new Date(),
-    });
+      isArchived: false,
+    };
+    await db
+      .insert(Vacancy)
+      .values(values)
+      .onConflictDoUpdate({ target: Vacancy.hhId, set: values });
   };
 
   const result = await searchVacancies(
