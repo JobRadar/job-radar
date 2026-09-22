@@ -62,7 +62,7 @@ export async function scrapeAndSaveKeyword(
   const cookies = await resolveCookies({
     cookiesPath: config.cookiesPath,
     credentials,
-    headless: true,
+    headless: config.headless,
   });
 
   // Уже видели эту вакансию раньше? Тогда searchVacancies не станет
@@ -140,7 +140,7 @@ export async function scrapeAndSaveKeyword(
       isKnownVacancy,
       onDuplicateVacancy,
     },
-    { ...config, headless: true },
+    config,
     cookies,
   );
 
