@@ -4,8 +4,8 @@ import { ScrapeRun, Vacancy } from "@job-radar/db/schema";
 import {
   getScraperConfig,
   resolveCookies,
-  searchVacancies,
   type ScrapedVacancySummary,
+  searchVacancies,
   type WorkFormat,
 } from "@job-radar/scraper";
 
