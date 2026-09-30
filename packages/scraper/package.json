@@ -24,15 +24,15 @@
     "playwright:install": "playwright install chromium --with-deps"
   },
   "dependencies": {
-    "@crawlee/playwright": "3.18.1",
+    "@crawlee/playwright": "3.18.2",
     "@job-radar/config": "workspace:*",
     "@job-radar/validators": "workspace:*",
-    "crawlee": "3.18.1",
+    "crawlee": "3.18.2",
     "playwright": "1.63.0"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.6.2",
+    "@types/node": "26.6.3",
     "typescript": "7.0.2"
   }
 }

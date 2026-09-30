@@ -24,14 +24,14 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@hatchet-dev/typescript-sdk": "1.33.1",
+    "@hatchet-dev/typescript-sdk": "1.33.2",
     "@job-radar/ai": "workspace:*",
     "@job-radar/db": "workspace:*",
     "@job-radar/scraper": "workspace:*"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.6.2",
+    "@types/node": "26.6.3",
     "typescript": "7.0.2"
   }
 }
