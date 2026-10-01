@@ -25,9 +25,9 @@
     "@job-radar/db": "workspace:*",
     "@job-radar/jobs": "workspace:*",
     "@job-radar/validators": "workspace:*",
-    "@orpc/contract": "^1.15.2",
-    "@orpc/server": "^1.15.2",
-    "better-auth": "1.7.5",
+    "@orpc/contract": "^1.15.4",
+    "@orpc/server": "^1.15.4",
+    "better-auth": "1.7.7",
     "superjson": "2.2.6",
     "zod": "4.6.5"
   },
