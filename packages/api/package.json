@@ -25,15 +25,15 @@
     "@job-radar/db": "workspace:*",
     "@job-radar/jobs": "workspace:*",
     "@job-radar/validators": "workspace:*",
-    "@orpc/contract": "^1.15.4",
-    "@orpc/server": "^1.15.4",
+    "@orpc/contract": "^1.15.5",
+    "@orpc/server": "^1.15.5",
     "better-auth": "1.7.7",
     "superjson": "2.2.6",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
-    "@types/node": "26.6.3",
+    "@types/node": "26.6.4",
     "typescript": "7.0.2"
   }
 }
