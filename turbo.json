@@ -42,6 +42,9 @@
       "cache": false,
       "interactive": true
     },
+    "migrate": {
+      "cache": false
+    },
     "studio": {
       "cache": false,
       "persistent": true

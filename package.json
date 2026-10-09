@@ -13,6 +13,7 @@
     "db:push": "turbo -F @job-radar/db push",
     "db:generate": "turbo -F @job-radar/db generate",
     "db:migrate": "turbo -F @job-radar/db migrate",
+    "migrate": "bun db:migrate",
     "db:studio": "turbo -F @job-radar/db studio",
     "dev": "turbo watch dev --continue",
     "dev:next": "turbo watch dev -F @job-radar/app...",
