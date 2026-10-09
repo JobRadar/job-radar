@@ -1,4 +1,5 @@
 import { hatchet } from "./client";
+import type { FindApplicationsInput } from "./workflows/find-applications";
 import type { ScrapeHhInput } from "./workflows/scrape-hh";
 
 /**
@@ -19,5 +20,24 @@ const SCRAPE_HH_WORKFLOW = "scrape-hh";
  */
 export async function triggerScrapeHh(input: ScrapeHhInput): Promise<string> {
   const ref = await hatchet.admin.runWorkflow(SCRAPE_HH_WORKFLOW, input);
+  return ref.getWorkflowRunId();
+}
+
+/** Имя workflow подбора вакансий и создания задач на отклик. */
+const FIND_APPLICATIONS_WORKFLOW = "find-applications";
+
+/**
+ * Запустить подбор вакансий под резюме и подготовку откликов по имени workflow.
+ * Как и `triggerScrapeHh`, не тянет в бандл Next.js сам workflow и его зависимости.
+ *
+ * @returns id созданного прогона workflow
+ */
+export async function triggerFindApplications(
+  input: FindApplicationsInput,
+): Promise<string> {
+  const ref = await hatchet.admin.runWorkflow(
+    FIND_APPLICATIONS_WORKFLOW,
+    input,
+  );
   return ref.getWorkflowRunId();
 }
