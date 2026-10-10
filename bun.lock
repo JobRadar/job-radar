@@ -48,7 +48,7 @@
       "devDependencies": {
         "@job-radar/tailwind-config": "workspace:*",
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "@types/react": "19.3.0",
         "@types/react-dom": "19.3.0",
         "tailwindcss": "4.3.3",
@@ -66,7 +66,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -87,7 +87,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -102,7 +102,7 @@
       "devDependencies": {
         "@better-auth/cli": "1.4.21",
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -115,7 +115,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "tsdown": "latest",
         "typescript": "7.0.2",
       },
@@ -133,7 +133,7 @@
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
         "@types/bun": "1.4.2",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "@types/pg": "^8.23.1",
         "@types/ws": "^8.18.2",
         "drizzle-kit": "^0.31.11",
@@ -161,7 +161,7 @@
       },
       "devDependencies": {
         "@react-email/preview-server": "5.2.10",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "@types/nodemailer": "^8.0.2",
         "@types/react": "19.3.0",
         "@types/react-dom": "19.3.0",
@@ -172,14 +172,14 @@
     "packages/jobs": {
       "name": "@job-radar/jobs",
       "dependencies": {
-        "@hatchet-dev/typescript-sdk": "1.36.0",
+        "@hatchet-dev/typescript-sdk": "1.37.0",
         "@job-radar/ai": "workspace:*",
         "@job-radar/db": "workspace:*",
         "@job-radar/scraper": "workspace:*",
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -194,7 +194,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -208,7 +208,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "tsdown": "latest",
         "typescript": "7.0.2",
       },
@@ -274,7 +274,7 @@
       },
       "devDependencies": {
         "@job-radar/tsconfig": "workspace:*",
-        "@types/node": "26.6.4",
+        "@types/node": "26.6.5",
         "typescript": "7.0.2",
       },
     },
@@ -595,7 +595,7 @@
 
     "@grpc/proto-loader": ["@grpc/proto-loader@0.8.1", "", { "dependencies": { "lodash.camelcase": "^4.3.0", "long": "^5.0.0", "protobufjs": "^7.5.5", "yargs": "^17.7.2" }, "bin": { "proto-loader-gen-types": "build/bin/proto-loader-gen-types.js" } }, "sha512-wtF6h+DY6M3YaDBPAmvuuA6jV8Sif9MjtOI5euKFWRgCDl5PeDpPsHR9u2l6St5ceY8AZgoNDww5+HvEsXFsGg=="],
 
-    "@hatchet-dev/typescript-sdk": ["@hatchet-dev/typescript-sdk@1.36.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.15.0", "@connectrpc/connect": "~2.1.2", "@connectrpc/connect-node": "~2.1.2", "@connectrpc/connect-web": "~2.1.2", "@types/qs": "^6.15.0", "abort-controller-x": "^0.5.0", "axios": "^1.15.2", "long": "^5.3.1", "nice-grpc": "^2.1.14", "nice-grpc-common": "^2.0.2", "protobufjs": "^7.5.5", "qs": "^6.16.0", "semver": "^7.7.4", "yaml": "^2.8.3", "zod-to-json-schema": "^3.24.2" }, "peerDependencies": { "@anthropic-ai/claude-agent-sdk": "^0.3.148", "@grpc/grpc-js": "^1.14.3", "@modelcontextprotocol/sdk": "^1.29.0", "@openai/agents": "0.14.2", "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.0.0", "@opentelemetry/exporter-trace-otlp-grpc": "^0.221.0", "@opentelemetry/instrumentation": "^0.221.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "prom-client": "^15.1.3", "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["@anthropic-ai/claude-agent-sdk", "@grpc/grpc-js", "@modelcontextprotocol/sdk", "@openai/agents", "@opentelemetry/api", "@opentelemetry/core", "@opentelemetry/exporter-trace-otlp-grpc", "@opentelemetry/instrumentation", "@opentelemetry/sdk-trace-base", "prom-client"] }, "sha512-sixrA2SUje3xSky1tcc12ZS5WGWNSO4BFTN/OORYos2OhTKwLRWxO8i0OnN/vCVS1lqIkJJrmR0Z1wOIuXENJQ=="],
+    "@hatchet-dev/typescript-sdk": ["@hatchet-dev/typescript-sdk@1.37.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.15.0", "@connectrpc/connect": "~2.1.2", "@connectrpc/connect-node": "~2.1.2", "@connectrpc/connect-web": "~2.1.2", "@types/qs": "^6.15.0", "abort-controller-x": "^0.5.0", "axios": "^1.15.2", "long": "^5.3.1", "nice-grpc": "^2.1.14", "nice-grpc-common": "^2.0.2", "protobufjs": "^7.5.5", "qs": "^6.16.0", "semver": "^7.7.4", "yaml": "^2.8.3", "zod-to-json-schema": "^3.24.2" }, "peerDependencies": { "@anthropic-ai/claude-agent-sdk": "^0.3.148", "@grpc/grpc-js": "^1.14.3", "@modelcontextprotocol/sdk": "^1.29.0", "@openai/agents": "0.14.2", "@opentelemetry/api": "^1.9.0", "@opentelemetry/core": "^2.0.0", "@opentelemetry/exporter-trace-otlp-grpc": "^0.221.0", "@opentelemetry/instrumentation": "^0.221.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "prom-client": "^15.1.3", "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["@anthropic-ai/claude-agent-sdk", "@grpc/grpc-js", "@modelcontextprotocol/sdk", "@openai/agents", "@opentelemetry/api", "@opentelemetry/core", "@opentelemetry/exporter-trace-otlp-grpc", "@opentelemetry/instrumentation", "@opentelemetry/sdk-trace-base", "prom-client"] }, "sha512-+DRsL/y1XiXF7DwqVs2Q5s9TW3mQCyOtHTCkBjzG0UDi8Si33D68qX6OyYSqli0r6/BEh3IiPc/pwPt+1O5IrA=="],
 
     "@hey-api/spec-types": ["@hey-api/spec-types@0.0.0-next-20260408030107", "", { "dependencies": { "@hey-api/types": "0.1.4" } }, "sha512-P5DKr4dpZ7lmZpZt2bc2KWuzU9vl4GZcN7VrjchZF1WWKNGZFnwWhBxZo1t6P2muOCopIvqD2Fvp5os4QiitKA=="],
 
@@ -1185,7 +1185,7 @@
 
     "@types/jsdom": ["@types/jsdom@21.1.7", "", { "dependencies": { "@types/node": "*", "@types/tough-cookie": "*", "parse5": "^7.0.0" } }, "sha512-yOriVnggzrnQ3a9OKOCxaVuSug3w3/SbOj5i7VwXWZEyUNl3bLF9V3MfxGbZKuwqJOQyRfqXyROBB1CoZLFWzA=="],
 
-    "@types/node": ["@types/node@26.6.4", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg=="],
+    "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],
 
     "@types/nodemailer": ["@types/nodemailer@8.0.2", "", { "dependencies": { "@types/node": "*" } }, "sha512-c7M5ox8p0nEOfbJ2E9Qcmt8/QCu/VzsiAhzBiZbvky2PhKZDHpKB3sQHBM5MEZNkCfBOaS6S9//AGPRTNB7IaA=="],
 
