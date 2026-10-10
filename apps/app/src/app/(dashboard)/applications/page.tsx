@@ -1,5 +1,8 @@
-import { SiteHeader } from "~/components/layout";
+import { paths } from "@job-radar/config";
+import { redirect } from "next/navigation";
+
 import { ApplicationList } from "~/components/applications/application-list";
+import { SiteHeader } from "~/components/layout";
 import { api } from "~/orpc/server";
 
 export const dynamic = "force-dynamic";
@@ -9,10 +12,11 @@ export const metadata = {
 };
 
 const STATUSES = ["todo", "applied", "skipped"] as const;
+const PAGE_SIZE = 50;
 type Status = (typeof STATUSES)[number];
 
 interface ApplicationsPageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; page?: string }>;
 }
 
 /**
@@ -27,7 +31,25 @@ export default async function ApplicationsPage({
     ? (params.status as Status)
     : "todo";
 
-  const { items, counts } = await api.application.list({ status, limit: 50 });
+  const requestedPage = Number(params.page ?? 1);
+  // Keep offsets within PostgreSQL's integer range, including for malformed URLs.
+  const page =
+    Number.isSafeInteger(requestedPage) &&
+    requestedPage > 0 &&
+    (requestedPage - 1) * PAGE_SIZE <= 2_147_483_647
+      ? requestedPage
+      : 1;
+  const { items, counts, total } = await api.application.list({
+    status,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  });
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // A status change can remove the last item on the current page.
+  if (page > totalPages) {
+    redirect(`${paths.applications.root}?status=${status}&page=${totalPages}`);
+  }
 
   return (
     <>
@@ -41,7 +63,14 @@ export default async function ApplicationsPage({
           </p>
         </div>
 
-        <ApplicationList status={status} counts={counts} items={items} />
+        <ApplicationList
+          status={status}
+          counts={counts}
+          items={items}
+          total={total}
+          page={page}
+          totalPages={totalPages}
+        />
       </div>
     </>
   );

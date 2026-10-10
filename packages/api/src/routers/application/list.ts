@@ -1,4 +1,4 @@
-import { and, ApplicationTask, desc, eq, sql, Vacancy } from "@job-radar/db";
+import { ApplicationTask, and, desc, eq, sql, Vacancy } from "@job-radar/db";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../orpc";
@@ -48,7 +48,11 @@ export const list = protectedProcedure
             eq(ApplicationTask.status, input.status),
           ),
         )
-        .orderBy(desc(ApplicationTask.score), desc(ApplicationTask.createdAt))
+        .orderBy(
+          desc(ApplicationTask.score),
+          desc(ApplicationTask.createdAt),
+          desc(ApplicationTask.id),
+        )
         .limit(input.limit)
         .offset(input.offset),
       db

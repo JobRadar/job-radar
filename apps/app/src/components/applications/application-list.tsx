@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import { orpc } from "~/orpc/react";
 
@@ -43,7 +44,13 @@ interface ApplicationListProps {
   status: Status;
   counts: Record<Status, number>;
   items: ApplicationItem[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
+
+const REFRESH_INTERVAL_MS = 10_000;
+const REFRESH_WINDOW_MS = 10 * 60_000;
 
 const TABS: { status: Status; label: string; href: string }[] = [
   { status: "todo", label: "К отклику", href: paths.applications.root },
@@ -248,6 +255,9 @@ export function ApplicationList({
   status,
   counts,
   items,
+  total,
+  page,
+  totalPages,
 }: ApplicationListProps) {
   const router = useRouter();
 
@@ -281,6 +291,31 @@ export function ApplicationList({
       toast.error("Не удалось запустить подбор", { description: err.message });
     },
   });
+
+  const workflowRunId = runMutation.data?.workflowRunId;
+  useEffect(() => {
+    if (!workflowRunId) return;
+
+    // The run endpoint only queues work. Refresh while results arrive, with a
+    // fixed deadline even if a background tab throttles the timers.
+    const deadline = Date.now() + REFRESH_WINDOW_MS;
+    const interval = window.setInterval(() => {
+      if (Date.now() >= deadline) {
+        window.clearInterval(interval);
+        return;
+      }
+      router.refresh();
+    }, REFRESH_INTERVAL_MS);
+    const timeout = window.setTimeout(() => {
+      window.clearInterval(interval);
+      router.refresh();
+    }, REFRESH_WINDOW_MS);
+
+    return () => {
+      window.clearInterval(interval);
+      window.clearTimeout(timeout);
+    };
+  }, [router, workflowRunId]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -339,6 +374,43 @@ export function ApplicationList({
           ))}
         </div>
       )}
+
+      <nav
+        aria-label="Страницы откликов"
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
+        <p className="text-muted-foreground text-sm tabular-nums">
+          Всего: {total} · Страница {page} из {totalPages}
+        </p>
+        <div className="flex gap-2">
+          {page > 1 ? (
+            <Button variant="outline" asChild>
+              <Link
+                href={`${paths.applications.root}?status=${status}&page=${page - 1}`}
+              >
+                Назад
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" disabled>
+              Назад
+            </Button>
+          )}
+          {page < totalPages ? (
+            <Button variant="outline" asChild>
+              <Link
+                href={`${paths.applications.root}?status=${status}&page=${page + 1}`}
+              >
+                Далее
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" disabled>
+              Далее
+            </Button>
+          )}
+        </div>
+      </nav>
     </div>
   );
 }
