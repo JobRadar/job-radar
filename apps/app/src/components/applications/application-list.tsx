@@ -65,6 +65,10 @@ const EMPTY_TEXT: Record<Status, string> = {
   skipped: "Пропущенных вакансий нет.",
 };
 
+/**
+ * Форматировать диапазон зарплаты с валютой и пометкой «на руки».
+ * Вернуть null, если зарплата отсутствует или обе границы не заданы.
+ */
 function formatSalary(salary: HhSalary | null): string | null {
   if (!salary || (salary.from == null && salary.to == null)) return null;
   const nf = (n: number) => n.toLocaleString("ru-RU");
@@ -87,6 +91,7 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+/** Показать вакансию, письмо и доступные для статуса задачи действия. */
 function ApplicationCard({
   item,
   onSetStatus,
@@ -101,6 +106,7 @@ function ApplicationCard({
     Boolean,
   );
 
+  /** Скопировать письмо и сообщить об успехе или необходимости копировать вручную. */
   async function handleCopy() {
     const ok = await copyText(item.coverLetter);
     if (ok) {
@@ -234,6 +240,10 @@ function ApplicationCard({
   );
 }
 
+/**
+ * Показать вкладки со счётчиками и задачи выбранного статуса.
+ * Обновить страницу после смены статуса задачи или запуска подбора вакансий.
+ */
 export function ApplicationList({
   status,
   counts,

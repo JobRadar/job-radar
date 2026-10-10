@@ -15,6 +15,10 @@ interface ApplicationsPageProps {
   searchParams: Promise<{ status?: string }>;
 }
 
+/**
+ * Загрузить до 50 задач выбранного статуса и счётчики для страницы откликов.
+ * Если статус отсутствует или некорректен, показать задачи «К отклику».
+ */
 export default async function ApplicationsPage({
   searchParams,
 }: ApplicationsPageProps) {
