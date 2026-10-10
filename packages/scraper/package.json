@@ -28,7 +28,7 @@
     "@job-radar/config": "workspace:*",
     "@job-radar/validators": "workspace:*",
     "crawlee": "3.18.2",
-    "playwright": "1.63.0"
+    "playwright": "1.64.0"
   },
   "devDependencies": {
     "@job-radar/tsconfig": "workspace:*",
