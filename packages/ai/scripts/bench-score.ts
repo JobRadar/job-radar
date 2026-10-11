@@ -10,6 +10,10 @@
 import { scoreResumeVacancy } from "../src/score";
 
 const REPEATS = Number(process.env.REPEATS ?? 2);
+if (!Number.isSafeInteger(REPEATS) || REPEATS <= 0) {
+  console.error("REPEATS должен быть положительным безопасным целым числом.");
+  process.exit(1);
+}
 
 const RESUME = `# Иван Петров — Frontend-разработчик
 Опыт: 4 года. Москва.
@@ -55,9 +59,7 @@ if (models.length === 0) {
   process.exit(1);
 }
 
-console.log(
-  `repeats=${REPEATS}`,
-);
+console.log(`repeats=${REPEATS}`);
 
 for (const modelId of models) {
   const cells: string[] = [];

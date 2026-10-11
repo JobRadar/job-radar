@@ -48,4 +48,4 @@ export function getModel(modelId: string = env.AI_MODEL): LanguageModel {
 export const defaultModelId = env.AI_MODEL;
 
 /** Модель для скоринга резюме↔вакансия: `AI_SCORE_MODEL`, иначе `AI_MODEL`. */
-export const scoreModelId = env.AI_SCORE_MODEL ?? env.AI_MODEL;
+export const scoreModelId = env.AI_SCORE_MODEL || env.AI_MODEL;

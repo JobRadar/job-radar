@@ -5,17 +5,34 @@ const MAX_ATTEMPTS = 3;
 
 /**
  * Достаёт JSON-объект из ответа модели: снимает ```json-обёртку и отбрасывает
- * текст вокруг первой «{» и последней «}».
+ * текст вокруг первого полного JSON-объекта.
  */
 function extractJson(text: string): unknown {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
   const body = fenced?.[1] ?? text;
   const start = body.indexOf("{");
-  const end = body.lastIndexOf("}");
-  if (start < 0 || end <= start) {
-    throw new Error("в ответе нет JSON-объекта");
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  if (start >= 0) {
+    for (let i = start; i < body.length; i++) {
+      const char = body[i];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (char === "\\") escaped = true;
+        else if (char === '"') inString = false;
+      } else if (char === '"') {
+        inString = true;
+      } else if (char === "{") {
+        depth++;
+      } else if (char === "}") {
+        depth--;
+        if (depth === 0) return JSON.parse(body.slice(start, i + 1));
+      }
+    }
   }
-  return JSON.parse(body.slice(start, end + 1));
+  throw new Error("в ответе нет JSON-объекта");
 }
 
 /**
