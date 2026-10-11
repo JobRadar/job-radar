@@ -1,0 +1,25 @@
+{
+  "name": "@job-radar/trigger",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo .trigger node_modules",
+    "trigger:dev": "trigger dev --env-file ../../.env",
+    "trigger:deploy": "trigger deploy --env-file ../../.env",
+    "format": "biome format .",
+    "lint": "biome lint .",
+    "check": "biome check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@trigger.dev/sdk": "4.7.3"
+  },
+  "devDependencies": {
+    "@job-radar/tsconfig": "workspace:*",
+    "@trigger.dev/build": "4.7.3",
+    "@types/node": "26.6.5",
+    "trigger.dev": "4.7.3",
+    "typescript": "7.0.2"
+  }
+}
