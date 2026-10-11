@@ -1,5 +1,7 @@
-import type { PlaywrightCrawlingContext } from "crawlee";
-import { Configuration, PlaywrightCrawler, RequestQueue } from "crawlee";
+import { setTimeout as sleep } from "node:timers/promises";
+import { type CheerioAPI, load } from "cheerio";
+import type { CheerioCrawlingContext, Session } from "crawlee";
+import { CheerioCrawler, Configuration, RequestQueue } from "crawlee";
 import type { Cookie } from "playwright";
 import type { ScraperConfig } from "../config";
 import type {
@@ -8,8 +10,13 @@ import type {
   ScrapedVacancySummary,
   ScrapeResult,
 } from "../types";
-import { CaptchaDetectedError, isCaptchaPage } from "./captcha";
-import { getNextPageUrl, parseSearchPage, parseVacancyPage } from "./parser";
+import { saveCookies } from "./auth";
+import {
+  BrowserCaptchaResolver,
+  CaptchaDetectedError,
+  isCaptchaHtml,
+} from "./captcha";
+import { parseNextPageUrl, parseSearchHtml, parseVacancyHtml } from "./parser";
 
 const HH_SEARCH_URL = "https://hh.ru/search/vacancy";
 
@@ -47,13 +54,32 @@ const LABEL = {
   VACANCY: "VACANCY",
 } as const;
 
+/** Коды ответа, с которыми hh.ru может не пустить HTTP-запрос */
+const BLOCKED_STATUS_CODES = [403, 429];
+
+/**
+ * Кладёт cookies hh.ru в cookie jar сессии crawlee. Через сессию, а не
+ * заголовком Cookie: заголовок got теряет на редиректе на региональный
+ * поддомен (hh.ru → volokolamsk.hh.ru), а cookies сессии — нет.
+ */
+function seedSessionCookies(session: Session, cookies: Cookie[]): void {
+  for (const cookie of cookies) {
+    const host = cookie.domain.replace(/^\./, "");
+    session.setCookies([cookie], `https://${host}${cookie.path || "/"}`);
+  }
+}
+
 /**
  * Запускает скрапинг вакансий по ключевому слову.
  *
  * Алгоритм:
  * 1. Обходит страницы поисковой выдачи (до maxPages).
- * 2. Для каждой карточки открывает страницу вакансии и парсит детали.
+ * 2. Для каждой карточки загружает страницу вакансии и парсит детали.
  * 3. Возвращает массив полных данных по вакансиям.
+ *
+ * Страницы загружаются обычными HTTP-запросами — hh.ru отдаёт их уже
+ * отрендеренными на сервере, браузер для парсинга не нужен. Браузер
+ * открывается только если hh.ru показал капчу (см. BrowserCaptchaResolver).
  */
 export async function searchVacancies(
   options: HhSearchOptions,
@@ -69,6 +95,13 @@ export async function searchVacancies(
   let captchaError: CaptchaDetectedError | null = null;
   const { onVacancy, isKnownVacancy, onDuplicateVacancy } = options;
 
+  // После капчи hh.ru выдаёт новые cookies — их версия растёт, и каждая
+  // сессия crawlee при следующем запросе получает актуальный набор.
+  let currentCookies = cookies;
+  let cookiesVersion = 0;
+  const seededVersion = new WeakMap<Session, number>();
+  const captchaResolver = new BrowserCaptchaResolver(config, cookies);
+
   // Изолируем хранилище crawlee для каждого запуска
   const storageDir = `${config.storageDir}/${Date.now()}`;
   Configuration.getGlobalConfig().set("storageClientOptions", {
@@ -83,7 +116,7 @@ export async function searchVacancies(
     userData: { page: 0 },
   });
 
-  const crawler = new PlaywrightCrawler({
+  const crawler = new CheerioCrawler({
     requestQueue: queue,
     maxConcurrency: config.maxConcurrency,
     maxRequestRetries: config.maxRetries,
@@ -97,53 +130,50 @@ export async function searchVacancies(
         (config.captchaMaxAttempts * (config.captchaWaitMs + 60_000)) / 1000,
       ),
 
-    launchContext: {
-      launchOptions: {
-        headless: config.headless,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      },
+    // Одна сессия на весь прогон — как один и тот же браузер: постоянные
+    // заголовки и cookies. 403/429 не считаем «сессия заблокирована» —
+    // такие ответы разбирает requestHandler (капча → браузер).
+    sessionPoolOptions: {
+      maxPoolSize: 1,
+      blockedStatusCodes: [],
+      sessionOptions: { maxUsageCount: Number.MAX_SAFE_INTEGER },
     },
 
-    // Применяем cookies перед каждой навигацией
     preNavigationHooks: [
-      async ({ page }: PlaywrightCrawlingContext) => {
-        if (cookies.length > 0) {
-          await page.context().addCookies(cookies);
+      async ({ session }: CheerioCrawlingContext) => {
+        if (session && seededVersion.get(session) !== cookiesVersion) {
+          seedSessionCookies(session, currentCookies);
+          seededVersion.set(session, cookiesVersion);
         }
         // Рандомная задержка — снижает вероятность блокировки
         const [min, max] = config.requestDelay;
-        await page.waitForTimeout(min + Math.random() * (max - min));
+        await sleep(min + Math.random() * (max - min));
       },
     ],
 
     requestHandler: async ({
-      page,
+      $: responseHtml,
       request,
+      response,
       log,
-    }: PlaywrightCrawlingContext) => {
-      // hh.ru может показать антибот-капчу вместо любой страницы (и выдачи,
-      // и вакансии). Обычно блокировка временная — ждём и пробуем ту же
-      // страницу снова; если капча не проходит после нескольких попыток,
-      // останавливаем весь прогон совсем (дальше ждать бессмысленно).
-      if (await isCaptchaPage(page)) {
-        let stillBlocked = true;
-        for (let attempt = 1; attempt <= config.captchaMaxAttempts; attempt++) {
-          log.warning(
-            `hh.ru показал капчу, жду ${Math.round(config.captchaWaitMs / 1000)}с и пробую снова (${attempt}/${config.captchaMaxAttempts})`,
-            { url: request.url },
-          );
-          await page.waitForTimeout(config.captchaWaitMs);
-          await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
-          if (!(await isCaptchaPage(page))) {
-            stillBlocked = false;
-            log.info("Капча прошла, продолжаю скрапинг", {
-              url: request.url,
-            });
-            break;
-          }
-        }
+    }: CheerioCrawlingContext) => {
+      const pageUrl = request.loadedUrl ?? request.url;
+      let $: CheerioAPI = responseHtml;
 
-        if (stillBlocked) {
+      // hh.ru может показать антибот-капчу вместо любой страницы (и выдачи,
+      // и вакансии). Тогда открываем её в браузере и ждём, пока капчу
+      // решат или блокировка истечёт; если не дождались — останавливаем
+      // весь прогон совсем (дальше ждать бессмысленно).
+      if (
+        isCaptchaHtml($) ||
+        BLOCKED_STATUS_CODES.includes(response.statusCode ?? 0)
+      ) {
+        log.warning(
+          `hh.ru не пускает (капча или HTTP ${response.statusCode}) — открываю страницу в браузере`,
+          { url: request.url },
+        );
+        const resolved = await captchaResolver.resolve(request.url);
+        if (!resolved) {
           captchaError = new CaptchaDetectedError(request.url);
           log.error(
             "hh.ru всё ещё показывает капчу после нескольких попыток — останавливаю скрапинг",
@@ -152,33 +182,39 @@ export async function searchVacancies(
           crawler.stop("captcha-still-blocked");
           return;
         }
+
+        currentCookies = resolved.cookies.filter((c) =>
+          c.domain.endsWith("hh.ru"),
+        );
+        cookiesVersion++;
+        // Сохраняем, чтобы следующий прогон сразу шёл с этими cookies
+        saveCookies(config.cookiesPath, currentCookies);
+        log.info("Капча прошла, продолжаю скрапинг", { url: request.url });
+        $ = load(resolved.html);
       }
 
       const label = request.label as keyof typeof LABEL | undefined;
 
       // ── Страница поисковой выдачи ──────────────────────────────────────────
       if (label === LABEL.SEARCH) {
+        const found = parseSearchHtml($, pageUrl);
+        // Нет карточек — скорее всего, hh.ru отдал не ту страницу; падаем,
+        // чтобы crawlee повторил запрос (раньше это был таймаут ожидания
+        // селектора карточек).
+        if (found.length === 0) {
+          throw new Error("На странице выдачи не нашлось карточек вакансий");
+        }
+
         pagesScraped++;
         log.info(`Поиск: страница ${pagesScraped}`, { url: request.url });
 
-        // Поддерживаем оба дизайна hh.ru: старый (bloko) и новый (Magritte)
-        await page.waitForSelector(
-          [
-            '[data-qa="vacancy-serp__vacancy"]',
-            ".vacancy-serp-item__layout",
-            'a[data-qa="serp-item__title"]',
-          ].join(", "),
-          { timeout: 15_000 },
-        );
-
-        const found = await parseSearchPage(page);
         for (const s of found) {
           if (s.hhId) summaries.set(s.hhId, s);
         }
 
         // Пагинация
         if (pagesScraped < maxPages) {
-          const nextUrl = await getNextPageUrl(page);
+          const nextUrl = parseNextPageUrl($, pageUrl);
           if (nextUrl) {
             await queue.addRequest({
               url: nextUrl,
@@ -216,12 +252,12 @@ export async function searchVacancies(
 
         log.info(`Парсинг вакансии ${hhId}`, { title: summary.title });
 
-        await page.waitForSelector('[data-qa="vacancy-title"]', {
-          timeout: 10_000,
-        });
+        if ($('[data-qa="vacancy-title"]').length === 0) {
+          throw new Error(`На странице вакансии ${hhId} нет заголовка`);
+        }
 
         try {
-          const details = await parseVacancyPage(page, summary);
+          const details = parseVacancyHtml($, summary, pageUrl);
           vacancies.push(details);
           if (onVacancy) await onVacancy(details);
         } catch (err) {
@@ -247,17 +283,18 @@ export async function searchVacancies(
       }
     },
 
-    failedRequestHandler: async ({
-      request,
-      log,
-    }: PlaywrightCrawlingContext) => {
+    failedRequestHandler: async ({ request, log }: CheerioCrawlingContext) => {
       const msg = `Не удалось загрузить ${request.url} (${request.retryCount} попыток)`;
       errors.push(msg);
       log.error(msg);
     },
   });
 
-  await crawler.run();
+  try {
+    await crawler.run();
+  } finally {
+    await captchaResolver.close();
+  }
 
   if (captchaError) {
     throw captchaError;

@@ -3,13 +3,16 @@ export interface ScraperConfig {
   storageDir: string;
   /** Путь к файлу с сохранёнными cookies hh.ru */
   cookiesPath: string;
-  /** Максимальное число параллельных браузерных страниц */
+  /** Максимальное число параллельных HTTP-запросов к hh.ru */
   maxConcurrency: number;
   /** Задержка между запросами [min, max] в мс — снижает шанс блокировки */
   requestDelay: [number, number];
   /** Число повторных попыток при ошибке на запрос */
   maxRetries: number;
-  /** Показывать браузер (false = headless) */
+  /**
+   * Показывать браузер (false = headless). Браузер нужен только для входа
+   * на hh.ru и для капчи — с false её можно решить в открывшемся окне.
+   */
   headless: boolean;
   /** Сколько ждать (мс) перед повторной попыткой, если hh.ru показал капчу */
   captchaWaitMs: number;
