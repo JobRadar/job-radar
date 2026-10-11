@@ -24,7 +24,7 @@ export interface FindApplicationsInput {
   maxTasks?: number;
   /** Максимум вакансий, которые рассматриваем за прогон (бюджет LLM). По умолчанию 40 */
   candidateLimit?: number;
-  /** Идентификатор модели OpenRouter (по умолчанию из env) */
+  /** Идентификатор LLM-модели (по умолчанию из env) */
   modelId?: string;
 }
 

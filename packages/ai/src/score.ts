@@ -1,6 +1,6 @@
-import { generateObject } from "ai";
 
-import { defaultModelId, getModel } from "./client";
+import { getModel, scoreModelId } from "./client";
+import { generateJson } from "./json";
 import {
   type MatchScore,
   MatchScoreSchema,
@@ -34,7 +34,7 @@ export async function scoreResumeVacancy(params: {
   vacancy: VacancyForScoring;
   modelId?: string;
 }): Promise<ScoreResult> {
-  const modelId = params.modelId ?? defaultModelId;
+  const modelId = params.modelId ?? scoreModelId;
 
   const skillsLine =
     params.vacancy.skills.length > 0
@@ -62,7 +62,7 @@ export async function scoreResumeVacancy(params: {
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
+  const object = await generateJson({
     model: getModel(modelId),
     schema: MatchScoreSchema,
     system: SYSTEM_PROMPT,

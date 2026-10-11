@@ -22,7 +22,7 @@ export interface GenerateResumeJobInput {
   creativity?: CreativityLevel;
   /** Язык резюме */
   language?: string;
-  /** Идентификатор модели OpenRouter */
+  /** Идентификатор LLM-модели */
   modelId?: string;
 }
 
