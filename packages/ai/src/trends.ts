@@ -1,7 +1,7 @@
-import { generateObject } from "ai";
 import { z } from "zod";
 
 import { defaultModelId, getModel } from "./client";
+import { generateJson } from "./json";
 
 /** Zod-схема структурированного резюме трендов рынка. */
 export const TrendInsightSchema = z.object({
@@ -71,7 +71,7 @@ export async function summarizeTrends(
     `Спрос по ролям: ${rolesLine || "нет данных"}`,
   ].join("\n");
 
-  const { object } = await generateObject({
+  const object = await generateJson({
     model: getModel(modelId),
     schema: TrendInsightSchema,
     prompt,

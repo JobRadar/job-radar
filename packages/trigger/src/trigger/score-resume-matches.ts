@@ -16,7 +16,7 @@ export interface ScoreResumeMatchesInput {
   limit?: number;
   /** Переоценить уже оценённые пары (по умолчанию только pending/новые) */
   rescoreAll?: boolean;
-  /** Идентификатор модели OpenRouter (по умолчанию из env) */
+  /** Идентификатор LLM-модели (по умолчанию из env) */
   modelId?: string;
 }
 

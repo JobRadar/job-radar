@@ -1,48 +1,51 @@
-import { env } from "@job-radar/config";
 import {
-  createOpenRouter,
-  type OpenRouterProvider,
-} from "@openrouter/ai-sdk-provider";
+  createOpenAICompatible,
+  type OpenAICompatibleProvider,
+} from "@ai-sdk/openai-compatible";
+import { env } from "@job-radar/config";
 import type { LanguageModel } from "ai";
 
-let cachedProvider: OpenRouterProvider | null = null;
+let cachedProvider: OpenAICompatibleProvider | null = null;
 
 /**
- * Ленивая инициализация OpenRouter-провайдера для Vercel AI SDK.
+ * Ленивая инициализация OpenAI-совместимого провайдера для Vercel AI SDK
+ * (router.cheap, OpenRouter и т.п. — задаётся `AI_BASE_URL`).
  *
- * Ключ берётся из env (`OPENROUTER_API_KEY`). Провайдер кэшируется,
+ * Ключ берётся из env (`AI_API_KEY`). Провайдер кэшируется,
  * чтобы не пересоздавать клиента на каждый вызов.
  *
- * @throws если `OPENROUTER_API_KEY` не задан
+ * @throws если `AI_API_KEY` не задан
  */
-export function getOpenRouter(): OpenRouterProvider {
+export function getProvider(): OpenAICompatibleProvider {
   if (cachedProvider) return cachedProvider;
 
-  const apiKey = env.OPENROUTER_API_KEY;
+  const apiKey = env.AI_API_KEY;
   if (!apiKey) {
     throw new Error(
-      "OPENROUTER_API_KEY не задан. Укажите ключ OpenRouter в .env, чтобы использовать LLM-функции.",
+      "AI_API_KEY не задан. Укажите ключ LLM-шлюза в .env, чтобы использовать LLM-функции.",
     );
   }
 
-  cachedProvider = createOpenRouter({
+  cachedProvider = createOpenAICompatible({
+    name: "llm",
     apiKey,
-    baseURL: env.OPENROUTER_BASE_URL,
+    baseURL: env.AI_BASE_URL,
   });
 
   return cachedProvider;
 }
 
 /**
- * Возвращает языковую модель OpenRouter по идентификатору.
+ * Возвращает языковую модель по идентификатору.
  *
- * @param modelId напр. "openai/gpt-4o-mini"; по умолчанию — `OPENROUTER_MODEL`
+ * @param modelId напр. "gemini-3.8-flash"; по умолчанию — `AI_MODEL`
  */
-export function getModel(
-  modelId: string = env.OPENROUTER_MODEL,
-): LanguageModel {
-  return getOpenRouter().chat(modelId);
+export function getModel(modelId: string = env.AI_MODEL): LanguageModel {
+  return getProvider().chatModel(modelId);
 }
 
 /** Модель LLM по умолчанию (из env). */
-export const defaultModelId = env.OPENROUTER_MODEL;
+export const defaultModelId = env.AI_MODEL;
+
+/** Модель для скоринга резюме↔вакансия: `AI_SCORE_MODEL`, иначе `AI_MODEL`. */
+export const scoreModelId = env.AI_SCORE_MODEL || env.AI_MODEL;

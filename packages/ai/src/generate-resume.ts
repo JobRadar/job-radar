@@ -1,6 +1,6 @@
-import { generateObject } from "ai";
 
 import { defaultModelId, getModel } from "./client";
+import { generateJson } from "./json";
 import {
   type GeneratedResume,
   GeneratedResumeSchema,
@@ -77,7 +77,7 @@ export async function generateResume(
     .filter(Boolean)
     .join("\n");
 
-  const { object } = await generateObject({
+  const object = await generateJson({
     model: getModel(modelId),
     schema: GeneratedResumeSchema,
     system: SYSTEM_PROMPT,

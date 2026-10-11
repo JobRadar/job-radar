@@ -1,5 +1,10 @@
 export { analyzeMarket, type VacancyForAnalysis } from "./analyze";
-export { defaultModelId, getModel, getOpenRouter } from "./client";
+export {
+  defaultModelId,
+  getModel,
+  getProvider,
+  scoreModelId,
+} from "./client";
 export { type CoverLetterResult, generateCoverLetter } from "./cover-letter";
 export { generateResume } from "./generate-resume";
 export { type ScoreResult, scoreResumeVacancy } from "./score";

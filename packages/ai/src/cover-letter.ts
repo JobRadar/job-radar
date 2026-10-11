@@ -1,7 +1,7 @@
-import { generateObject } from "ai";
 import { z } from "zod";
 
 import { defaultModelId, getModel } from "./client";
+import { generateJson } from "./json";
 import type { VacancyForScoring } from "./types";
 
 const CoverLetterSchema = z.object({
@@ -77,7 +77,7 @@ export async function generateCoverLetter(params: {
     .filter((line, i, arr) => line !== "" || arr[i - 1] !== "")
     .join("\n");
 
-  const { object } = await generateObject({
+  const object = await generateJson({
     model: getModel(modelId),
     schema: CoverLetterSchema,
     system: SYSTEM_PROMPT,
