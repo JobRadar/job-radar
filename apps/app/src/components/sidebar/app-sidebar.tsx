@@ -14,6 +14,7 @@ import {
 import {
   IconBriefcase,
   IconChartBar,
+  IconChecklist,
   IconDashboard,
   IconFileText,
   IconInnerShadowTop,
@@ -45,6 +46,22 @@ const data = {
         { title: "Новые", url: `${paths.vacancies.root}?status=new` },
         { title: "Архив", url: `${paths.vacancies.root}?status=archived` },
         { title: "Ключевые слова", url: paths.keywords.root },
+      ],
+    },
+    {
+      title: "Отклики",
+      url: paths.applications.root,
+      icon: IconChecklist,
+      items: [
+        { title: "К отклику", url: paths.applications.root },
+        {
+          title: "Отправленные",
+          url: `${paths.applications.root}?status=applied`,
+        },
+        {
+          title: "Пропущенные",
+          url: `${paths.applications.root}?status=skipped`,
+        },
       ],
     },
     {

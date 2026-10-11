@@ -1,4 +1,6 @@
 import { hatchet } from "./client";
+import { findApplicationsWorkflow } from "./workflows/find-applications";
+import { findApplicationsScheduledWorkflow } from "./workflows/find-applications-scheduled";
 import { generateResumeWorkflow } from "./workflows/generate-resume";
 import { helloWorldTask } from "./workflows/hello-world";
 import { processDocumentWorkflow } from "./workflows/multi-step";
@@ -37,6 +39,8 @@ async function main() {
       scrapeHhScheduledWorkflow,
       generateResumeWorkflow,
       scoreResumeMatchesWorkflow,
+      findApplicationsWorkflow,
+      findApplicationsScheduledWorkflow,
     ],
     // Maximum number of concurrent task runs this worker will accept.
     // Tune based on the workload's CPU/memory profile.

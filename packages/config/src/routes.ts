@@ -6,6 +6,7 @@ const ROOTS = {
   RESUMES: "/resumes",
   TRENDS: "/trends",
   KEYWORDS: "/keywords",
+  APPLICATIONS: "/applications",
 } as const;
 
 export const paths = {
@@ -20,6 +21,9 @@ export const paths = {
   },
   keywords: {
     root: ROOTS.KEYWORDS,
+  },
+  applications: {
+    root: ROOTS.APPLICATIONS,
   },
   resumes: {
     root: ROOTS.RESUMES,

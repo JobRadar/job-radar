@@ -14,11 +14,13 @@
  *   post.delete     – delete a post                            (admin)
  *   vacancy.list    – paginated list of vacancies             (protected)
  *   resume.*        – current user's resumes CRUD              (protected)
+ *   application.*   – tasks to apply to matched vacancies      (protected)
  *   admin.users.*   – user management                          (admin)
  *   admin.stats.*   – system-wide statistics                   (admin)
  */
 
 import { adminRouter } from "./admin";
+import { applicationRouter } from "./application";
 import { categoryRouter } from "./category";
 import { keywordRouter } from "./keyword";
 import { matchRouter } from "./match";
@@ -38,6 +40,7 @@ export const appRouter = {
   match: matchRouter,
   trends: trendsRouter,
   keyword: keywordRouter,
+  application: applicationRouter,
 };
 
 export type AppRouter = typeof appRouter;
