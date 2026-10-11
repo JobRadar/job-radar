@@ -2,6 +2,9 @@
   "name": "@job-radar/trigger",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "license": "MIT",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo .trigger node_modules",
@@ -13,6 +16,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@job-radar/ai": "workspace:*",
+    "@job-radar/db": "workspace:*",
     "@trigger.dev/sdk": "4.7.3"
   },
   "devDependencies": {

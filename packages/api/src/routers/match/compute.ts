@@ -17,7 +17,7 @@ import { protectedProcedure } from "../../orpc";
  * Массовая оценка резюме против вакансий его категории (синхронно, батчем).
  *
  * Ограничена `limit` вакансий за вызов, чтобы запрос не висел слишком долго.
- * Для полной фоновой обработки используйте воркфлоу `score-resume-matches`.
+ * Для полной фоновой обработки используйте задачу Trigger.dev `score-resume-matches`.
  */
 export const compute = protectedProcedure
   .input(

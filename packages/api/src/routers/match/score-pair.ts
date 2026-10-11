@@ -16,7 +16,7 @@ import { protectedProcedure } from "../../orpc";
  * Оценить одну пару (резюме, вакансия) синхронно через LLM и сохранить результат.
  *
  * Используется для точечной оценки по запросу. Массовый скоринг — через
- * `match.compute` или фоновый воркфлоу `score-resume-matches`.
+ * `match.compute` или фоновую задачу Trigger.dev `score-resume-matches` (packages/trigger).
  */
 export const scorePair = protectedProcedure
   .input(

@@ -10,8 +10,6 @@ export { helloWorldTask } from "./workflows/hello-world";
 export type { ProcessDocumentInput } from "./workflows/multi-step";
 export { processDocumentWorkflow } from "./workflows/multi-step";
 export { scheduledWorkflow } from "./workflows/scheduled";
-export type { ScoreResumeMatchesInput } from "./workflows/score-resume-matches";
-export { scoreResumeMatchesWorkflow } from "./workflows/score-resume-matches";
 export type { ScrapeHhInput } from "./workflows/scrape-hh";
 export { scrapeHhWorkflow } from "./workflows/scrape-hh";
 export { scrapeHhScheduledWorkflow } from "./workflows/scrape-hh-scheduled";
