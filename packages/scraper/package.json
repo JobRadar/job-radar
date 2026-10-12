@@ -27,6 +27,7 @@
     "@crawlee/playwright": "3.18.2",
     "@job-radar/config": "workspace:*",
     "@job-radar/validators": "workspace:*",
+    "cheerio": "1.0.0-rc.12",
     "crawlee": "3.18.2",
     "playwright": "1.64.0"
   },

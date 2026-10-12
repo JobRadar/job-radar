@@ -1,12 +1,17 @@
 import { logger } from "@job-radar/config";
+import {
+  type AnyNode,
+  type Cheerio,
+  type CheerioAPI,
+  type Element as CheerioElement,
+  load,
+} from "cheerio";
 import type { Page } from "playwright";
 import type {
   HhSalary,
   ScrapedVacancyDetails,
   ScrapedVacancySummary,
 } from "../types";
-
-const HH_BASE_URL = "https://hh.ru";
 
 /**
  * Парсит строку зарплаты hh.ru.
@@ -114,6 +119,28 @@ export function parsePublishedAt(text: string | null): Date | null {
   return null;
 }
 
+/** Абсолютный URL по href из HTML (в разметке hh.ru бывают и относительные) */
+function resolveUrl(href: string | undefined, pageUrl: string): string | null {
+  if (!href) return null;
+  try {
+    return new URL(href, pageUrl).href;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Текст первого элемента по селектору. null — если элемента нет вовсе
+ * (пустой элемент даёт "", как textContent в браузере).
+ */
+function textOf<T extends AnyNode>(
+  root: Cheerio<T>,
+  selector: string,
+): string | null {
+  const el = root.find(selector).first();
+  return el.length > 0 ? el.text().trim() : null;
+}
+
 /**
  * Находит карточки вакансий на странице.
  *
@@ -123,143 +150,123 @@ export function parsePublishedAt(text: string | null): Date | null {
  * Это нужно для нового дизайна Magritte, где карточка обёрнута в
  * произвольный div без стабильного data-qa на корневом элементе.
  */
-function resolveCards(): Element[] {
-  const standard = Array.from(
-    document.querySelectorAll(
-      '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout',
-    ),
+function resolveCards($: CheerioAPI): Cheerio<CheerioElement> {
+  const standard = $(
+    '[data-qa="vacancy-serp__vacancy"], .vacancy-serp-item__layout',
   );
   if (standard.length > 0) return standard;
 
   // Fallback: находим карточки по ссылкам на вакансии
-  const titleLinks = Array.from(
-    document.querySelectorAll<HTMLAnchorElement>(
-      'a[data-qa="serp-item__title"]',
-    ),
-  );
-
-  const seen = new Set<Element>();
-  for (const link of titleLinks) {
+  const seen = new Set<CheerioElement>();
+  for (const link of $('a[data-qa="serp-item__title"]').toArray()) {
     // Поднимаемся вверх, ища осмысленный контейнер карточки
-    let el: Element | null = link.parentElement;
-    for (let i = 0; i < 12; i++) {
-      if (!el) break;
-      const dqa = el.getAttribute("data-qa") ?? "";
-      const tag = el.tagName.toLowerCase();
+    let el = $(link).parent();
+    let container: CheerioElement | null = null;
+    for (let i = 0; i < 12 && el.length > 0; i++) {
+      const dqa = el.attr("data-qa") ?? "";
+      const tag = el.get(0)?.tagName.toLowerCase() ?? "";
       if (
         dqa.includes("vacancy") ||
         dqa.includes("serp") ||
         tag === "li" ||
         tag === "article"
       ) {
-        seen.add(el);
+        container = el.get(0) ?? null;
         break;
       }
-      el = el.parentElement;
+      el = el.parent();
     }
     // Если контейнер не нашли — берём прямого родителя ссылки
-    if (!seen.has(link.parentElement as Element) && link.parentElement) {
-      seen.add(link.parentElement);
-    }
+    const card = container ?? $(link).parent().get(0);
+    if (card) seen.add(card);
   }
 
-  return Array.from(seen);
+  return $([...seen]);
 }
 
 /**
- * Парсит список карточек вакансий со страницы поисковой выдачи hh.ru.
+ * Парсит список карточек вакансий из HTML поисковой выдачи hh.ru.
  *
  * Поддерживает оба дизайна hh.ru:
  * - Старый (bloko): карточки с data-qa="vacancy-serp__vacancy"
  * - Новый (Magritte): карточки без стабильного корневого атрибута,
  *   заголовок через data-qa="serp-item__title" / "serp-item__title-text"
  */
+export function parseSearchHtml(
+  $: CheerioAPI,
+  pageUrl: string,
+): ScrapedVacancySummary[] {
+  return resolveCards($)
+    .toArray()
+    .map((node) => {
+      const card = $(node);
+
+      // Ссылка на вакансию (новый дизайн: data-qa на самом <a>)
+      let linkEl = card
+        .find(
+          'a[data-qa="serp-item__title"], a[data-qa="vacancy-serp__vacancy-title"]',
+        )
+        .first();
+      if (linkEl.length === 0) {
+        linkEl = card.find("a[href*='/vacancy/']").first();
+      }
+
+      // Query-параметры в ссылке — трекинг выдачи, в URL вакансии не нужны
+      const url = resolveUrl(linkEl.attr("href"), pageUrl)?.split("?")[0] ?? "";
+      const hhIdMatch = url.match(/\/vacancy\/(\d+)/);
+
+      // Текст заголовка: новый дизайн кладёт его во вложенный span
+      const title =
+        textOf(card, '[data-qa="serp-item__title-text"]') ??
+        textOf(
+          card,
+          '[data-qa="serp-item__title"], [data-qa="vacancy-serp__vacancy-title"]',
+        ) ??
+        (linkEl.length > 0 ? linkEl.text().trim() : "");
+
+      const employerName = textOf(
+        card,
+        '[data-qa="vacancy-serp__vacancy-employer-text"], [data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
+      );
+      // В текущей вёрстке (Magritte) у блока зарплаты нет своего data-qa —
+      // это первый прямой <span> внутри контейнера с классом
+      // "compensation-labels" (остальные прямые дети — теги в <div>).
+      const salaryText = textOf(
+        card,
+        '[data-qa="vacancy-serp__vacancy-compensation"], [class*="compensation-labels"] > span',
+      );
+      const area = textOf(
+        card,
+        '[data-qa="vacancy-serp__vacancy-address"], [data-qa="vacancy-serp__vacancy-address-text"]',
+      );
+      // Дата публикации по карточке выдачи в текущей вёрстке hh.ru
+      // (Magritte) не имеет стабильного маркера — оставляем селектор
+      // старого дизайна как fallback, но по факту почти всегда null.
+      const publishedAtText = textOf(
+        card,
+        '[data-qa="vacancy-serp__vacancy-date"]',
+      );
+
+      return {
+        hhId: hhIdMatch?.[1] ?? "",
+        title,
+        employerName,
+        salary: parseSalary(salaryText),
+        area,
+        url,
+        publishedAt: parsePublishedAt(publishedAtText),
+      };
+    })
+    .filter((v) => v.hhId && v.title);
+}
+
+/**
+ * То же, что parseSearchHtml, но для открытой в Playwright страницы.
+ */
 export async function parseSearchPage(
   page: Page,
 ): Promise<ScrapedVacancySummary[]> {
-  return page
-    .evaluate(
-      ({ baseUrl, resolveCardsFn }) => {
-        // Восстанавливаем функцию в контексте страницы
-        // biome-ignore lint/security/noGlobalEval: намеренно — сериализуем вспомогательную функцию для page.evaluate
-        const getCards = eval(`(${resolveCardsFn})`) as () => Element[];
-        const cards = getCards();
-
-        return cards.map((card) => {
-          // Ссылка на вакансию (новый дизайн: data-qa на самом <a>)
-          const linkEl =
-            (card.querySelector(
-              'a[data-qa="serp-item__title"], a[data-qa="vacancy-serp__vacancy-title"]',
-            ) as HTMLAnchorElement | null) ??
-            (card.querySelector(
-              "a[href*='/vacancy/']",
-            ) as HTMLAnchorElement | null);
-
-          const href = linkEl?.href ?? "";
-          const url = href.startsWith("http")
-            ? (href.split("?")[0] ?? href)
-            : `${baseUrl}${href.split("?")[0] ?? href}`;
-
-          const hhIdMatch = url.match(/\/vacancy\/(\d+)/);
-
-          // Текст заголовка: новый дизайн кладёт его во вложенный span
-          const titleTextEl = card.querySelector(
-            '[data-qa="serp-item__title-text"]',
-          );
-          const titleFallbackEl = card.querySelector(
-            '[data-qa="serp-item__title"], [data-qa="vacancy-serp__vacancy-title"]',
-          );
-          const title =
-            titleTextEl?.textContent?.trim() ??
-            titleFallbackEl?.textContent?.trim() ??
-            linkEl?.textContent?.trim() ??
-            "";
-
-          const employerEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-employer-text"], [data-qa="vacancy-serp__vacancy-employer-company-name"], [data-qa="employer-name"]',
-          );
-          // В текущей вёрстке (Magritte) у блока зарплаты нет своего data-qa —
-          // это первый прямой <span> внутри контейнера с классом
-          // "compensation-labels" (остальные прямые дети — теги в <div>).
-          const salaryEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-compensation"], [class*="compensation-labels"] > span',
-          );
-          const areaEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-address"], [data-qa="vacancy-serp__vacancy-address-text"]',
-          );
-          // Дата публикации по карточке выдачи в текущей вёрстке hh.ru
-          // (Magritte) не имеет стабильного маркера — оставляем селектор
-          // старого дизайна как fallback, но по факту почти всегда null.
-          const dateEl = card.querySelector(
-            '[data-qa="vacancy-serp__vacancy-date"]',
-          );
-
-          return {
-            hhId: hhIdMatch?.[1] ?? "",
-            title,
-            employerName: employerEl?.textContent?.trim() ?? null,
-            salaryText: salaryEl?.textContent?.trim() ?? null,
-            area: areaEl?.textContent?.trim() ?? null,
-            url,
-            publishedAtText: dateEl?.textContent?.trim() ?? null,
-          };
-        });
-      },
-      { baseUrl: HH_BASE_URL, resolveCardsFn: resolveCards.toString() },
-    )
-    .then((items) =>
-      items
-        .filter((v) => v.hhId && v.title)
-        .map((v) => ({
-          hhId: v.hhId,
-          title: v.title,
-          employerName: v.employerName,
-          salary: parseSalary(v.salaryText),
-          area: v.area,
-          url: v.url,
-          publishedAt: parsePublishedAt(v.publishedAtText),
-        })),
-    );
+  return parseSearchHtml(load(await page.content()), page.url());
 }
 
 /**
@@ -334,178 +341,122 @@ export function htmlToText(root: Element): string {
 }
 
 /**
- * Парсит полную страницу вакансии hh.ru.
+ * Ссылка на логотип работодателя. <img> логотипа hh.ru заполняет уже на
+ * клиенте, поэтому в HTML (без браузера) ссылки есть только в начальном
+ * состоянии страницы — <template id="HH-Lux-InitialState">.
+ */
+function parseEmployerLogoUrl($: CheerioAPI, pageUrl: string): string | null {
+  const img = $('[data-qa="vacancy-company-logo"] img[src]')
+    .first()
+    .attr("src");
+  if (img) return resolveUrl(img, pageUrl);
+
+  try {
+    const state = JSON.parse($("template#HH-Lux-InitialState").text());
+    const logos: { type?: string; url?: string }[] =
+      state?.vacancyView?.vacancyFull?.vacancy?.company?.logos ?? [];
+    const logo =
+      logos.find((l) => l.type === "vacancyPage") ??
+      logos.find((l) => l.type === "employerPage") ??
+      logos[0];
+    return resolveUrl(logo?.url, pageUrl);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Парсит HTML страницы вакансии hh.ru.
+ */
+export function parseVacancyHtml(
+  $: CheerioAPI,
+  summary: ScrapedVacancySummary,
+  pageUrl: string = summary.url,
+): ScrapedVacancyDetails {
+  const description = textOf($.root(), '[data-qa="vacancy-description"]');
+
+  const hiringFormats = $('div[data-qa="vacancy-hiring-formats"]')
+    .first()
+    .find(
+      '[data-qa="vacancy-hiring-format"], [data-qa="hiring-format-tag"], span, li',
+    )
+    .toArray()
+    .map((el) => $(el).text().trim())
+    .filter((v, i, arr) => v.length > 0 && arr.indexOf(v) === i);
+
+  // Каждый навык — отдельный элемент [data-qa="skills-element"] (Magritte,
+  // текст лежит во вложенном div без стабильного data-qa — берём весь
+  // текст элемента). bloko-tag__text — fallback для старой вёрстки.
+  const skills = $('[data-qa="skills-element"], [data-qa="bloko-tag__text"]')
+    .toArray()
+    .map((el) => $(el).text().trim())
+    .filter(Boolean);
+
+  const scheduleRaw = textOf(
+    $.root(),
+    '[data-qa="work-formats-text"], [data-qa="vacancy-view-work-format"]',
+  );
+  const schedule = scheduleRaw
+    ? scheduleRaw.replace(/^формат\s+работы\s*:\s*/i, "").trim() || null
+    : null;
+
+  // Дата публикации на карточке выдачи ничем не помечена (см.
+  // parseSearchHtml), но hh.ru кладёт её в JSON-LD (schema.org/JobPosting)
+  // на самой странице вакансии — это стабильный источник даты.
+  let publishedAt: Date | null = null;
+  try {
+    const data = JSON.parse(
+      $('script[type="application/ld+json"]').first().text(),
+    );
+    const parsed =
+      typeof data?.datePosted === "string" ? new Date(data.datePosted) : null;
+    publishedAt = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+  } catch {
+    publishedAt = null;
+  }
+
+  logger.info("parseVacancyHtml: вакансия разобрана", {
+    hhId: summary.hhId,
+    descriptionLen: description?.length ?? 0,
+    skills: skills.length,
+  });
+
+  return {
+    ...summary,
+    description,
+    hiringFormats,
+    skills,
+    experience: textOf($.root(), '[data-qa="vacancy-experience"]'),
+    employment: textOf($.root(), '[data-qa="common-employment-text"]'),
+    schedule,
+    employerLogoUrl: parseEmployerLogoUrl($, pageUrl),
+    employerUrl: resolveUrl(
+      $('a[data-qa="vacancy-company-name"]').first().attr("href"),
+      pageUrl,
+    ),
+    publishedAt,
+  };
+}
+
+/**
+ * То же, что parseVacancyHtml, но для открытой в Playwright страницы.
  */
 export async function parseVacancyPage(
   page: Page,
   summary: ScrapedVacancySummary,
 ): Promise<ScrapedVacancyDetails> {
-  let details:
-    | (Omit<ScrapedVacancyDetails, keyof ScrapedVacancySummary> & {
-        publishedAt: Date | null;
-      })
-    | null = null;
-  try {
-    logger.info("parseVacancyPage: выполняем evaluate на странице вакансии", {
-      url: page.url(),
-      hhId: summary.hhId,
-    });
-
-    type EvalResult = {
-      description: string | null;
-      descTextLen: number;
-      descHTMLpreview: string;
-      hiringFormats: string[];
-      skills: string[];
-      experience: string | null;
-      employment: string | null;
-      scheduleRaw: string | null;
-      employerLogoUrl: string | null;
-      employerUrl: string | null;
-      datePostedRaw: string | null;
-    };
-
-    const evalResult: EvalResult = await page.evaluate(() => {
-      const descEl = document.querySelector('[data-qa="vacancy-description"]');
-      const descTextLen = descEl?.textContent?.trim().length ?? 0;
-      const descHTMLpreview = descEl?.innerHTML.slice(0, 300) ?? "NOT FOUND";
-      const description = descEl?.textContent?.trim() ?? null;
-
-      const hiringFormatsEl = document.querySelector(
-        'div[data-qa="vacancy-hiring-formats"]',
-      );
-      const hiringFormats = hiringFormatsEl
-        ? Array.from(
-            hiringFormatsEl.querySelectorAll(
-              '[data-qa="vacancy-hiring-format"], [data-qa="hiring-format-tag"], span, li',
-            ),
-          )
-            .map((el) => el.textContent?.trim() ?? "")
-            .filter((v, i, arr) => v.length > 0 && arr.indexOf(v) === i)
-        : [];
-
-      // Каждый навык — отдельный элемент [data-qa="skills-element"] (Magritte,
-      // текст лежит во вложенном div без стабильного data-qa — берём весь
-      // textContent элемента). bloko-tag__text — fallback для старой вёрстки.
-      const skills = Array.from(
-        document.querySelectorAll(
-          '[data-qa="skills-element"], [data-qa="bloko-tag__text"]',
-        ),
-      )
-        .map((el) => el.textContent?.trim() ?? "")
-        .filter(Boolean);
-
-      const logoEl = document.querySelector(
-        '[data-qa="vacancy-company-logo"] img',
-      ) as HTMLImageElement | null;
-
-      const companyLinkEl = document.querySelector(
-        'a[data-qa="vacancy-company-name"]',
-      ) as HTMLAnchorElement | null;
-
-      const workFormatsEl = document.querySelector(
-        '[data-qa="work-formats-text"], [data-qa="vacancy-view-work-format"]',
-      );
-      const scheduleRaw = workFormatsEl?.textContent?.trim() ?? null;
-
-      // Дата публикации на карточке выдачи ничем не помечена (см.
-      // buildSearchUrl), но hh.ru кладёт её в JSON-LD (schema.org/JobPosting)
-      // на самой странице вакансии — это стабильный источник даты.
-      let datePostedRaw: string | null = null;
-      try {
-        const ldScript = document.querySelector(
-          'script[type="application/ld+json"]',
-        );
-        if (ldScript?.textContent) {
-          const data = JSON.parse(ldScript.textContent);
-          datePostedRaw =
-            typeof data?.datePosted === "string" ? data.datePosted : null;
-        }
-      } catch {
-        datePostedRaw = null;
-      }
-
-      return {
-        description,
-        descTextLen,
-        descHTMLpreview,
-        hiringFormats,
-        skills,
-        experience:
-          document
-            .querySelector('[data-qa="vacancy-experience"]')
-            ?.textContent?.trim() ?? null,
-        employment:
-          document
-            .querySelector('[data-qa="common-employment-text"]')
-            ?.textContent?.trim() ?? null,
-        scheduleRaw,
-        employerLogoUrl: logoEl?.src ?? null,
-        employerUrl: companyLinkEl?.href ?? null,
-        datePostedRaw,
-      };
-    });
-
-    logger.info("parseVacancyPage: результат evaluate", {
-      descTextLen: evalResult.descTextLen,
-      descPreview: evalResult.descHTMLpreview,
-      descriptionLen: evalResult.description?.length ?? 0,
-    });
-
-    const scheduleClean = evalResult.scheduleRaw
-      ? evalResult.scheduleRaw.replace(/^формат\s+работы\s*:\s*/i, "").trim() ||
-        null
-      : null;
-
-    const parsedDate = evalResult.datePostedRaw
-      ? new Date(evalResult.datePostedRaw)
-      : null;
-    const publishedAt =
-      parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null;
-
-    details = {
-      description: evalResult.description,
-      hiringFormats: evalResult.hiringFormats,
-      skills: evalResult.skills,
-      experience: evalResult.experience,
-      employment: evalResult.employment,
-      schedule: scheduleClean,
-      employerLogoUrl: evalResult.employerLogoUrl,
-      employerUrl: evalResult.employerUrl,
-      publishedAt,
-    };
-  } catch (err) {
-    logger.error("parseVacancyPage: evaluate выбросил ошибку", err);
-    details = null;
-  }
-
-  if (details === null) {
-    return {
-      ...summary,
-      description: null,
-      hiringFormats: [],
-      skills: [],
-      experience: null,
-      employment: null,
-      schedule: null,
-      employerLogoUrl: null,
-      employerUrl: null,
-    };
-  }
-
-  return { ...summary, ...details };
+  return parseVacancyHtml(load(await page.content()), summary, page.url());
 }
 
 /**
  * Возвращает URL следующей страницы пагинации или null.
  */
-export async function getNextPageUrl(page: Page): Promise<string | null> {
-  const nextHref = await page.evaluate(() => {
-    const btn = document.querySelector(
-      '[data-qa="pager-next"], a[rel="next"]',
-    ) as HTMLAnchorElement | null;
-    return btn?.href ?? null;
-  });
-
-  return nextHref ?? null;
+export function parseNextPageUrl(
+  $: CheerioAPI,
+  pageUrl: string,
+): string | null {
+  return resolveUrl(
+    $('[data-qa="pager-next"], a[rel="next"]').first().attr("href"),
+    pageUrl,
+  );
 }
