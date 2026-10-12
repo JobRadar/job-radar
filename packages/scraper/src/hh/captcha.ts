@@ -138,10 +138,10 @@ export class BrowserCaptchaResolver {
     const context = await this.getContext();
     const page = await context.newPage();
     try {
-      await page.goto(url, NAVIGATION);
+      let status = (await page.goto(url, NAVIGATION))?.status();
 
       let attempt = 0;
-      while (await isCaptchaPage(page)) {
+      while (status === 403 || status === 429 || (await isCaptchaPage(page))) {
         attempt++;
         if (attempt > this.config.captchaMaxAttempts) return null;
 
@@ -156,9 +156,9 @@ export class BrowserCaptchaResolver {
         // После ручного решения hh.ru может оставить на другой странице —
         // возвращаемся на нужную; иначе просто перезагружаем текущую.
         if (await waitForCaptchaGone(page, this.config.captchaWaitMs)) {
-          await page.goto(url, NAVIGATION);
+          status = (await page.goto(url, NAVIGATION))?.status();
         } else {
-          await page.reload(NAVIGATION);
+          status = (await page.reload(NAVIGATION))?.status();
         }
       }
 
